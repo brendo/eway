@@ -2,7 +2,6 @@
 
 	class Extension_eWay extends Extension {
 
-		const TRX_OK = 0;
 		const GATEWAY_ERROR = 100;
 		const DATA_ERROR = 200;
 
@@ -170,7 +169,15 @@
 		 *
 		 * @uses AddCustomPreferenceFieldsets
 		 */
-		public function appendPreferences($context) {
+		public static function appendPreferences($context) {
+			// If the Payment Gateway Interface extension is installed, don't
+			// double display the preference, unless this function is called from
+			// the `pgi-loader` context.
+			if(
+				Symphony::ExtensionManager()->fetchStatus('pgi_loader') == EXTENSION_ENABLED
+				xor isset($context['pgi-loader'])
+			) return;
+
 			$fieldset = new XMLElement('fieldset');
 			$fieldset->setAttribute('class', 'settings');
 			$fieldset->appendChild(new XMLElement('legend', __('eWay')));
