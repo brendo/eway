@@ -177,6 +177,13 @@
 
 			$div = new XMLElement('div', null, array('class' => 'group'));
 
+			// Customer ID
+			$label = new XMLElement('label', __('Customer ID'));
+			$label->appendChild(
+				Widget::Input('settings[eway][production-customer-id]', Symphony::Configuration()->get("production-customer-id", 'eway'))
+			);
+			$div->appendChild($label);
+
 			// Build the Gateway Mode
 			$label = new XMLElement('label', __('Gateway Mode'));
 			$options = array(
@@ -187,19 +194,12 @@
 			$label->appendChild(Widget::Select('settings[eway][gateway-mode]', $options));
 			$div->appendChild($label);
 
-			// Customer ID
-			$label = new XMLElement('label', __('Customer ID'));
-			$label->appendChild(
-				Widget::Input('settings[eway][production-customer-id]', Symphony::Configuration()->get("production-customer-id", 'eway'))
-			);
-			$div->appendChild($label);
-
 			$fieldset->appendChild($div);
 			$context['wrapper']->appendChild($fieldset);
 		}
 
 		/**
-		 * Saves the Member Section to the configuration
+		 * Saves the Customer ID and the gateway mode to the configuration
 		 *
 		 * @uses savePreferences
 		 */
@@ -212,7 +212,6 @@
 
 			Administration::instance()->saveConfig();
 		}
-
 
 	/*-------------------------------------------------------------------------
 		Process Transaction:
