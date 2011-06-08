@@ -1,7 +1,7 @@
 # eWay Payment Gateway
 
 Version: 0.1
-Release Date: 8th June 2011
+Release Date: unreleased
 Author: Brendan Abbott
 Requirements: Symphony 2.2
 

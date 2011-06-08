@@ -2,45 +2,50 @@
 
 	class Extension_eWay extends Extension {
 
+		const TRX_OK = 0;
+		const GATEWAY_ERROR = 100;
+		const DATA_ERROR = 200;
+
 		public function about() {
 			return array(
-				'name'			=> 'eWay',
-				'version'		=> '0.1',
-				'release-date'	=> '2011-06-08',
-				'author'		=> array(
+				'name' => 'eWay',
+				'version' => '0.1',
+				'release-date' => 'unreleased',
+				'author' => array(
 					array(
-						'name'			=> 'Henry Singleton',
-						'email'			=> ''
+						'name' => 'Henry Singleton'
 					),
 					array(
-						'name'			=> 'Brendan Abbott',
-						'email'			=> 'brendan@bloodbone.ws'
+						'name' => 'Brendan Abbott',
+						'email' => 'brendan@bloodbone.ws'
 					)
 				),
 				'description' => 'Manage and track payments using eWAY.'
 			);
 		}
 
+		/**
+		 * @link http://www.eway.com.au/Developer/eway-api/cvn-xml.aspx
+		 */
 		private static $defaults = array(
-			'ewayCustomerID'					=> '',
-			'ewayTotalAmount'					=> '',
-			'ewayCustomerFirstName'				=> '',
-			'ewayCustomerLastName'				=> '',
-			'ewayCustomerEmail'					=> '',
-			'ewayCustomerAddress'				=> '',
-			'ewayCustomerPostcode'				=> '',
-			'ewayCustomerInvoiceDescription'	=> '',
-			'ewayCustomerInvoiceRef'			=> '',
-			'ewayCardHoldersName'				=> '',
-			'ewayCardNumber'					=> '',
-			'ewayCardExpiryMonth'				=> '',
-			'ewayCardExpiryYear'				=> '',
-			'ewayCVN'							=> '',
-			'ewayTrxnNumber'					=> '',//returned as ewayTrxnReference. used for tracking. this should be the order id or other internal id.
-			'ewayOption1'						=> '',
-			'ewayOption2'						=> '',
-			'ewayOption3'						=> '',
-			'ewayCVN'							=> ''
+			'ewayCustomerID' => '',
+			'ewayTotalAmount' => '',
+			'ewayCustomerFirstName' => '',
+			'ewayCustomerLastName' => '',
+			'ewayCustomerEmail' => '',
+			'ewayCustomerAddress' => '',
+			'ewayCustomerPostcode' => '',
+			'ewayCustomerInvoiceDescription' => '',
+			'ewayCustomerInvoiceRef' => '',
+			'ewayCardHoldersName' => '',
+			'ewayCardNumber' => '',
+			'ewayCardExpiryMonth' => '',
+			'ewayCardExpiryYear' => '',
+			'ewayTrxnNumber' => '',//returned as ewayTrxnReference. used for tracking. this should be the order id or other internal id.
+			'ewayOption1' => '',
+			'ewayOption2' => '',
+			'ewayOption3' => '',
+			'ewayCVN' => ''
 		);
 
 		private static $required_fields = array(
@@ -53,12 +58,15 @@
 			'ewayCVN'
 		);
 
+		/**
+		 * @link http://www.eway.com.au/Developer/payment-code/transaction-results-response-codes.aspx
+		 */
 		private static $approved_codes = array(
-			'00',
-			'08',
-			'10',
-			'11',
-			'16'
+			'00', // Transaction Approved
+			'08', // Honour with Identification
+			'10', // Approved for Partial Amount
+			'11', // Approved, VIP
+			'16', // Approved, Update Track 3
 		);
 
 	/*-------------------------------------------------------------------------
@@ -142,7 +150,15 @@
 		Process Payments:
 	-------------------------------------------------------------------------*/
 
-		public function process_transaction(array $values) {
+		/**
+		 * Given an associative array of data, `$values`, this function will merge
+		 * with the default eWay fields and send the transaction to eWay's Merchant
+		 * Hosted Payments CVN gateway. This function will return an
+		 *
+		 * @link http://www.eway.com.au/Developer/eway-api/cvn-xml.aspx
+		 *
+		 */
+		public function process_transaction(array $values = array()) {
 			// Merge Defaults and passed values
 			$request_array = array_merge(Extension_eWay::$defaults, $values);
 			$request_array['ewayCustomerID'] = self::getCustomerID();
@@ -158,67 +174,73 @@
 				}
 			}
 
-			// If all the required fields exist, lets dance with eWay
-			if ($valid_data) {
-				//Generate the XML
-				$eway_request_xml = simplexml_load_string('<ewaygateway/>');
-				foreach($request_array as $field_name => $field_data) {
-					$eway_request_xml->addChild($field_name, $field_data);
-				}
-
-				//Curl
-				require_once('library/curl.php');
-				$curl = new Curl;
-				$curl_result = $curl->post(
-					$this->getGatewayURI(),
-					$eway_request_xml->asXML()
-				);
-
-				$error = $curl->error();
-				if(!empty($error)) {
-					Symphony::$Log->pushToLog($error, E_USER_ERROR, true);
-
-					return(array(
-						'status'		=> 'Error',
-						'response-code'	=> '888888',
-						'response-message'	=> 'There was an error connecting to eWay, you have not been
-						charged for this transaction.'
-					));
-				}
-				else {
-					// Create a document for the result and load the resul
-					$eway_result = new DOMDocument('1.0', 'utf-8');
-					$eway_result->formatOutput = true;
-					$eway_result->loadXML($curl_result->body);
-					$eway_result_xpath = new DOMXPath($eway_result);
-
-					// Generate status result:
-					$eway_transaction_id   = $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnNumber)');
-					$bank_authorisation_id = $eway_result_xpath->evaluate('string(/ewayResponse/ewayAuthCode)');
-
-					$eway_approved = 'true' == strtolower($eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnStatus)'));
-					$eway_error = explode(',', $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnError)'), 2);
-					$eway_error_code = (is_numeric($eway_error[0]) ? array_shift($eway_error) : '');
-					$eway_error_message = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_error));
-
-					return(array(
-						'pgi-transaction-id'=> $eway_transaction_id,
-						'bank-authorisation-id'=> $bank_authorisation_id,
-						'status'		=> ($eway_approved ? 'Approved' : 'Declined'),
-						'response-code'	=> $eway_error_code,
-						'response-message'	=> $eway_error_message
-					));
-				}
+			// The data is invalid, return
+			if(!$valid_data) {
+				return(array(
+					'status' => __('Data error'),
+					'response-code' => Extension_eWay::DATA_ERROR,
+					'response-message' => __('Missing Fields: %s', array(implode(', ', $missing_fields))),
+					'missing-fields' => $missing_fields
+				));
 			}
 
-			return(array(
-				'status'		=> 'Error',
-				'response-code'	=> '999999',
-				'response-message'	=> 'Missing Fields: '.implode(', ', $missing_fields),
-				'missing-fields'=>	$missing_fields
-			));
+			// If all the required fields exist, lets dance with eWay
 
+				// Generate the XML
+			$eway_request_xml = simplexml_load_string('<ewaygateway/>');
+			foreach($request_array as $field_name => $field_data) {
+				$eway_request_xml->addChild($field_name, $field_data);
+			}
+
+			// Curl
+			require_once(TOOLKIT . '/class.gateway.php');
+			$curl = new Gateway;
+			$curl->init($this->getGatewayURI());
+			$curl->setopt('POST', true);
+			$curl->setopt('POSTFIELDS', $eway_request_xml->asXML());
+
+			$curl_result = $curl->exec();
+			$info = $curl->getInfoLast();
+
+			// The Gateway did not connect to eWay successfully
+			if(!in_array('200', $info["http_code"])) {
+				Symphony::$Log->pushToLog($error, E_USER_ERROR, true);
+
+				return(array(
+					'status' => __('Gateway error'),
+					'response-code' => Extension_eWay::GATEWAY_ERROR,
+					'response-message' => __('There was an error connecting to eWay, you have not been charged for this transaction.')
+				));
+			}
+
+			// Gateway connected, request sent, lets get the response
+			else {
+				// Create a document for the result and load the result
+				$eway_result = new DOMDocument('1.0', 'utf-8');
+				$eway_result->formatOutput = true;
+				$eway_result->loadXML($curl_result);
+				$eway_result_xpath = new DOMXPath($eway_result);
+
+				// Generate status result:
+				$eway_transaction_id   = $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnNumber)');
+				$bank_authorisation_id = $eway_result_xpath->evaluate('string(/ewayResponse/ewayAuthCode)');
+
+				$eway_approved = 'true' == strtolower($eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnStatus)'));
+				$eway_error = explode(',', $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnError)'), 2);
+				$eway_code = is_numeric($eway_error[0])
+					? array_shift($eway_error)
+					: Extension_eWay::TRX_OK;
+				$eway_response = ($eway_code != Extension_eWay::TRX_OK)
+					? preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_error))
+					: __('Transaction processed.');
+
+				return(array(
+					'status' => ($eway_approved ? __('Approved') : __('Declined')),
+					'response-code' => $eway_code,
+					'response-message' => $eway_response,
+					'pgi-transaction-id' => $eway_transaction_id,
+					'bank-authorisation-id' => $bank_authorisation_id
+				));
+			}
 		}
 	}
-
-?>
