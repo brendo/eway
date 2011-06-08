@@ -13,11 +13,11 @@
 				'release-date' => 'unreleased',
 				'author' => array(
 					array(
-						'name' => 'Henry Singleton'
-					),
-					array(
 						'name' => 'Brendan Abbott',
 						'email' => 'brendan@bloodbone.ws'
+					),
+					array(
+						'name' => 'Henry Singleton'
 					)
 				),
 				'description' => 'Manage and track payments using eWAY.'
@@ -78,7 +78,7 @@
 			Symphony::Configuration()->set('production-gateway-uri', 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp', 'eway');
 			Symphony::Configuration()->set('development-customer-id', '87654321', 'eway');
 			Symphony::Configuration()->set('development-gateway-uri', 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp', 'eway');
-			Symphony::Configuration()->set('development-mode', false, 'eway');
+			Symphony::Configuration()->set('gateway-mode', 'development', 'eway');
 			Administration::instance()->saveConfig();
 		}
 
@@ -87,21 +87,36 @@
 			Administration::instance()->saveConfig();
 		}
 
+		public function getSubscribedDelegates() {
+			return array(
+				array(
+					'page'		=> '/system/preferences/',
+					'delegate'	=> 'AddCustomPreferenceFieldsets',
+					'callback'	=> 'appendPreferences'
+				),
+				array(
+					'page'		=> '/system/preferences/',
+					'delegate'	=> 'Save',
+					'callback'	=> 'savePreferences'
+				)
+			);
+		}
+
 	/*-------------------------------------------------------------------------
 		Utilities:
 	-------------------------------------------------------------------------*/
 
 		public static function isTesting() {
-			return (boolean)Symphony::Configuration()->get('development-mode', 'eway');
+			return Symphony::Configuration()->get('gateway-mode', 'eway') == 'development';
 		}
 
 		public static function getGatewayURI() {
-			$mode = $this->isTesting() ? 'development' : 'production';
+			$mode = self::isTesting() ? 'development' : 'production';
 			return (string)Symphony::Configuration()->get("{$mode}-gateway-uri", 'eway');
 		}
 
 		public static function getCustomerId() {
-			$mode = $this->isTesting() ? 'development' : 'production';
+			$mode = self::isTesting() ? 'development' : 'production';
 			return (string)Symphony::Configuration()->get("{$mode}-customer-id", 'eway');
 		}
 
@@ -112,6 +127,18 @@
 			if (!($section instanceof Section)) return array();
 
 			return $section->fetchFields();
+		}
+
+		public static function fetchEntries($entries) {
+			$result = array();
+
+			if (!is_array($entries)) $entries = array($entries);
+
+			foreach ($entries as $entry) {
+				$result[$entry] = self::fetchEntry($entry);
+			}
+
+			return $result;
 		}
 
 		public static function fetchEntry($entries) {
@@ -134,47 +161,95 @@
 			}
 		}
 
-		public static function fetchEntries($entries) {
-			$result = array();
+	/*-------------------------------------------------------------------------
+		Delegate Callbacks:
+	-------------------------------------------------------------------------*/
 
-			if (!is_array($entries)) $entries = array($entries);
+		/**
+		 * Allows a user to enter their eWay details to be saved into the Configuration
+		 *
+		 * @uses AddCustomPreferenceFieldsets
+		 */
+		public function appendPreferences($context) {
+			$fieldset = new XMLElement('fieldset');
+			$fieldset->setAttribute('class', 'settings');
+			$fieldset->appendChild(new XMLElement('legend', __('eWay')));
 
-			foreach ($entries as $entry) {
-				$result[$entry] = self::fetchEntry($entry);
-			}
+			$div = new XMLElement('div', null, array('class' => 'group'));
 
-			return $result;
+			// Build the Gateway Mode
+			$label = new XMLElement('label', __('Gateway Mode'));
+			$options = array(
+				array('development', self::isTesting(), __('Development')),
+				array('production', !self::isTesting(), __('Production'))
+			);
+
+			$label->appendChild(Widget::Select('settings[eway][gateway-mode]', $options));
+			$div->appendChild($label);
+
+			// Customer ID
+			$label = new XMLElement('label', __('Customer ID'));
+			$label->appendChild(
+				Widget::Input('settings[eway][production-customer-id]', Symphony::Configuration()->get("production-customer-id", 'eway'))
+			);
+			$div->appendChild($label);
+
+			$fieldset->appendChild($div);
+			$context['wrapper']->appendChild($fieldset);
 		}
 
+		/**
+		 * Saves the Member Section to the configuration
+		 *
+		 * @uses savePreferences
+		 */
+		public function savePreferences(array &$context){
+			$settings = $context['settings'];
+
+			// Active Section
+			Symphony::Configuration()->set('production-customer-id', $settings['eway']['production-customer-id'], 'eway');
+			Symphony::Configuration()->set('gateway-mode', $settings['eway']['gateway-mode'], 'eway');
+
+			Administration::instance()->saveConfig();
+		}
+
+
 	/*-------------------------------------------------------------------------
-		Process Payments:
+		Process Transaction:
 	-------------------------------------------------------------------------*/
 
 		/**
 		 * Given an associative array of data, `$values`, this function will merge
 		 * with the default eWay fields and send the transaction to eWay's Merchant
-		 * Hosted Payments CVN gateway. This function will return an
+		 * Hosted Payments CVN gateway. This function will return an associative array
+		 * detailing the success or failure of a transaction.
 		 *
 		 * @link http://www.eway.com.au/Developer/eway-api/cvn-xml.aspx
-		 *
+		 * @param array $values
+		 *  An associative array of field data, usually from $_POST. The key
+		 *  should match the key's provided in `$required_fields`
+		 * @return array
+		 *  An associative array that at minimum contains 'status', 'response-code'
+		 *  and 'response-message' keys.
 		 */
-		public function process_transaction(array $values = array()) {
+		public static function processTransaction(array $values = array()) {
 			// Merge Defaults and passed values
 			$request_array = array_merge(Extension_eWay::$defaults, $values);
 			$request_array['ewayCustomerID'] = self::getCustomerID();
+			$request_array = array_intersect_key($request_array, Extension_eWay::$defaults);
 
 			// Check for missing fields
 			$valid_data = true;
 			$missing_fields = array();
 			$error = null;
 			foreach (Extension_eWay::$required_fields as $field_name) {
-				if (!array_key_exists($field_name, $request_array) || !empty($request_array[$field_name])) {
+				if (!array_key_exists($field_name, $request_array) || empty($request_array[$field_name])) {
 					$missing_fields[] = $field_name;
 					$valid_data = false;
 				}
 			}
 
-			// The data is invalid, return
+			// The data is invalid, return a `DATA_ERROR`
 			if(!$valid_data) {
 				return(array(
 					'status' => __('Data error'),
@@ -185,8 +260,7 @@
 			}
 
 			// If all the required fields exist, lets dance with eWay
-
-				// Generate the XML
+			// Generate the XML
 			$eway_request_xml = simplexml_load_string('<ewaygateway/>');
 			foreach($request_array as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, $field_data);
@@ -195,7 +269,7 @@
 			// Curl
 			require_once(TOOLKIT . '/class.gateway.php');
 			$curl = new Gateway;
-			$curl->init($this->getGatewayURI());
+			$curl->init(self::getGatewayURI());
 			$curl->setopt('POST', true);
 			$curl->setopt('POSTFIELDS', $eway_request_xml->asXML());
 
@@ -203,13 +277,14 @@
 			$info = $curl->getInfoLast();
 
 			// The Gateway did not connect to eWay successfully
-			if(!in_array('200', $info["http_code"])) {
+			if(!in_array($info["http_code"], array('200', '201'))) {
 				Symphony::$Log->pushToLog($error, E_USER_ERROR, true);
 
+				// Return a `GATEWAY_ERROR`
 				return(array(
 					'status' => __('Gateway error'),
 					'response-code' => Extension_eWay::GATEWAY_ERROR,
-					'response-message' => __('There was an error connecting to eWay, you have not been charged for this transaction.')
+					'response-message' => __('There was an error connecting to eWay.')
 				));
 			}
 
@@ -226,16 +301,19 @@
 				$bank_authorisation_id = $eway_result_xpath->evaluate('string(/ewayResponse/ewayAuthCode)');
 
 				$eway_approved = 'true' == strtolower($eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnStatus)'));
-				$eway_error = explode(',', $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnError)'), 2);
-				$eway_code = is_numeric($eway_error[0])
-					? array_shift($eway_error)
-					: Extension_eWay::TRX_OK;
-				$eway_response = ($eway_code != Extension_eWay::TRX_OK)
-					? preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_error))
-					: __('Transaction processed.');
 
+				// eWay responses come back like 00,Transaction Approved(Test CVN Gateway)
+				// It's important to known that although it's called ewayTrxnError, Error's can be 'good' as well
+				$eway_return = explode(',', $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnError)'), 2);
+
+				// Get the code
+				$eway_code = is_numeric($eway_return[0]) ? array_shift($eway_return) : '';
+				// Get the response
+				$eway_response = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_return));
+
+				// Hoorah, we spoke to eway, lets return what they said
 				return(array(
-					'status' => ($eway_approved ? __('Approved') : __('Declined')),
+					'status' => in_array($eway_code, Extension_eWay::$approved_codes) ? __('Approved') : __('Declined'),
 					'response-code' => $eway_code,
 					'response-message' => $eway_response,
 					'pgi-transaction-id' => $eway_transaction_id,
