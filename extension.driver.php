@@ -249,7 +249,8 @@
 			$missing_fields = array();
 			$error = null;
 			foreach (Extension_eWay::$required_fields as $field_name) {
-				if (!array_key_exists($field_name, $request_array) || empty($request_array[$field_name])) {
+				// Don't use empty as sometimes '0' is a valid value
+				if (!array_key_exists($field_name, $request_array) || $request_array[$field_name] == '') {
 					$missing_fields[] = $field_name;
 					$valid_data = false;
 				}
