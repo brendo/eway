@@ -1,6 +1,7 @@
 <?php
 
 	require_once EXTENSIONS . '/pgi_loader/lib/class.paymentgateway.php';
+	require_once EXTENSIONS . '/eway/extension.driver.php';
 
 	Class eWayPaymentGateway extends PaymentGateway {
 
