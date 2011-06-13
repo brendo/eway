@@ -1,7 +1,7 @@
 <?php
 
 	require_once EXTENSIONS . '/pgi_loader/lib/class.paymentgateway.php';
-	require_once EXTENSIONS . '/eway/extension.driver.php';
+	require_once EXTENSIONS . '/eway/lib/class.api.php';
 
 	Class eWayPaymentGateway extends PaymentGateway {
 
@@ -38,7 +38,7 @@
 		}
 
 		public static function processTransaction(array $values) {
-			return Extension_eWay::processTransaction($values);
+			return eWayAPI::processPayment($values);
 		}
 
 	}
