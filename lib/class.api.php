@@ -8,7 +8,7 @@
 	}
 
 	Abstract Class PGI_Request {
-		public function start($uri, $xml) {
+		public static function start($uri, $xml) {
 			// Curl
 			require_once(TOOLKIT . '/class.gateway.php');
 			$curl = new Gateway;
@@ -47,7 +47,7 @@
 		public static function processPayment(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/class.xmlpayment.php';
 
-			return XMLPayment::processPayment();
+			return XMLPayment::processPayment($values);
 		}
 
 	}
@@ -59,7 +59,10 @@
 		public function __construct($response) {
 			if(!is_array($response)) {
 				$this->gateway_response = $response;
-				$this->parseResponse($response);
+
+				if(strlen($response) != 0) {
+					$this->response = $this->parseResponse($response);
+				}
 			}
 			else {
 				$this->response = $response;
@@ -76,7 +79,7 @@
 				&& $this->response['status'] == __('Approved');
 		}
 
-		public function getError() {
+		public function getResponseMessage() {
 			return (is_array($this->response) && array_key_exists('response-message', $this->response))
 				? $this->response['response-message']
 				: null;
@@ -98,15 +101,18 @@
 		}
 
 		public function addToEventXML(XMLElement $event_xml) {
-			if(!$this->isSuccessful()) {
+			if($this->isSuccessful() === false) {
 				$event_xml->setAttribute('result', 'error');
 				$event_xml->appendChild(
-					new XMLElement('eway', $this->getError())
+					new XMLElement('eway', $this->getResponseMessage())
 				);
 			}
 
 			else {
 				$xEway = new XMLElement('eway');
+				$xEway->appendChild(
+					new XMLElement('message', $this->getResponseMessage())
+				);
 
 				foreach($this->getSuccess() as $key => $value) {
 					$xEway->appendChild(
@@ -118,5 +124,3 @@
 			}
 		}
 	}
-
-

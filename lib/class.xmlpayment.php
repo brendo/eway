@@ -8,15 +8,15 @@
 		 * Returns the CustomerID depending on the gateway mode.
 		 */
 		public static function getCustomerId() {
-			return (eWayAPI::isTesting() == 'production')
-				? (string)Symphony::Configuration()->get("production-customer-id", 'eway')
-				: eWayAPI::DEVELOPMENT_CUSTOMER_ID;
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_CUSTOMER_ID
+				: (string)Symphony::Configuration()->get("production-customer-id", 'eway');
 		}
 
 		public static function getGatewayURI() {
-			return (eWayAPI::isTesting() == 'production')
-				? 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
-				: 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp';
+			return (eWayAPI::isTesting())
+				? 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
+				: 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp';
 		}
 
 		/**
@@ -90,7 +90,7 @@
 		 *  An associative array that at minimum contains 'status', 'response-code'
 		 *  and 'response-message' keys.
 		 */
-		public function processPayment(array $values = array()) {
+		public static function processPayment(array $values = array()) {
 			// Merge Defaults and passed values
 			$request_array = array_merge(XMLPaymentSettings::getDefaults(), $values);
 			$request_array['ewayCustomerID'] = XMLPaymentSettings::getCustomerID();
@@ -126,7 +126,7 @@
 			}
 
 			// Start the Gateway
-			$curl = $this->start(XMLPaymentSettings::getGatewayURI(), $eway_request_xml->asXML());
+			$curl = PGI_Request::start(XMLPaymentSettings::getGatewayURI(), $eway_request_xml->asXML());
 			$curl_result = $curl->exec();
 			$info = $curl->getInfoLast();
 
@@ -171,7 +171,7 @@
 			$eway_response = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_return));
 
 			// Hoorah, we spoke to eway, lets return what they said
-			$this->response = array(
+			return array(
 				'status' => in_array($eway_code, XMLPaymentSettings::getApprovedCodes()) ? __('Approved') : __('Declined'),
 				'response-code' => $eway_code,
 				'response-message' => $eway_response,
