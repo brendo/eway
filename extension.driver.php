@@ -1,6 +1,6 @@
 <?php
 
-	require_once EXTENSION . '/eway/lib/class.api.php';
+	require_once EXTENSIONS . '/eway/lib/class.api.php';
 
 	class Extension_eWay extends Extension {
 
