@@ -45,9 +45,9 @@
 	-------------------------------------------------------------------------*/
 
 		public static function processPayment(array $values = array()) {
-			require_once EXTENSIONS . '/eway/lib/class.xmlpayment.php';
+			require_once EXTENSIONS . '/eway/lib/class.hostedpaymentscvn.php';
 
-			return XMLPayment::processPayment($values);
+			return HostedPaymentsCVN::processPayment($values);
 		}
 
 	}

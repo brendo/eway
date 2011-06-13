@@ -2,7 +2,7 @@
 
 	require_once EXTENSIONS . '/eway/lib/class.api.php';
 
-	Class XMLPaymentSettings extends PGI_MethodConfiguration {
+	Class HostedPaymentsCVNSettings extends PGI_MethodConfiguration {
 
 		/**
 		 * Returns the CustomerID depending on the gateway mode.
@@ -74,7 +74,7 @@
 		}
 	}
 
-	Class XMLPayment extends PGI_Request {
+	Class HostedPaymentsCVN extends PGI_Request {
 
 		/**
 		 * Given an associative array of data, `$values`, this function will merge
@@ -92,15 +92,15 @@
 		 */
 		public static function processPayment(array $values = array()) {
 			// Merge Defaults and passed values
-			$request_array = array_merge(XMLPaymentSettings::getDefaults(), $values);
-			$request_array['ewayCustomerID'] = XMLPaymentSettings::getCustomerID();
-			$request_array = array_intersect_key($request_array, XMLPaymentSettings::getDefaults());
+			$request_array = array_merge(HostedPaymentsCVNSettings::getDefaults(), $values);
+			$request_array['ewayCustomerID'] = HostedPaymentsCVNSettings::getCustomerID();
+			$request_array = array_intersect_key($request_array, HostedPaymentsCVNSettings::getDefaults());
 
 			// Check for missing fields
 			$valid_data = true;
 			$missing_fields = array();
 			$error = null;
-			foreach (XMLPaymentSettings::getRequiredFields() as $field_name) {
+			foreach (HostedPaymentsCVNSettings::getRequiredFields() as $field_name) {
 				// Don't use empty as sometimes '0' is a valid value
 				if (!array_key_exists($field_name, $request_array) || $request_array[$field_name] == '') {
 					$missing_fields[] = $field_name;
@@ -110,7 +110,7 @@
 
 			// The data is invalid, return a `DATA_ERROR`
 			if(!$valid_data) {
-				return new XMLPaymentResponse(array(
+				return new HostedPaymentsCVNResponse(array(
 					'status' => __('Data error'),
 					'response-code' => PGI_Response::DATA_ERROR,
 					'response-message' => __('Missing Fields: %s', array(implode(', ', $missing_fields))),
@@ -126,14 +126,14 @@
 			}
 
 			// Start the Gateway
-			$curl = PGI_Request::start(XMLPaymentSettings::getGatewayURI(), $eway_request_xml->asXML());
+			$curl = PGI_Request::start(HostedPaymentsCVNSettings::getGatewayURI(), $eway_request_xml->asXML());
 			$curl_result = $curl->exec();
 			$info = $curl->getInfoLast();
 
 			// The Gateway did not connect to eWay successfully
 			if(!in_array($info["http_code"], array('200', '201'))) {
 				// Return a `GATEWAY_ERROR`
-				return new XMLPaymentResponse(array(
+				return new HostedPaymentsCVNResponse(array(
 					'status' => __('Gateway error'),
 					'response-code' => PGI_Response::GATEWAY_ERROR,
 					'response-message' => __('There was an error connecting to eWay.'),
@@ -142,11 +142,11 @@
 			}
 
 			// Gateway connected, request sent, lets get the response
-			else return new XMLPaymentResponse($curl_result);
+			else return new HostedPaymentsCVNResponse($curl_result);
 		}
 	}
 
-	Class XMLPaymentResponse extends eWayResponse {
+	Class HostedPaymentsCVNResponse extends eWayResponse {
 
 		public function parseResponse($response) {
 			// Create a document for the result and load the result
@@ -172,7 +172,7 @@
 
 			// Hoorah, we spoke to eway, lets return what they said
 			return array(
-				'status' => in_array($eway_code, XMLPaymentSettings::getApprovedCodes()) ? __('Approved') : __('Declined'),
+				'status' => in_array($eway_code, HostedPaymentsCVNSettings::getApprovedCodes()) ? __('Approved') : __('Declined'),
 				'response-code' => $eway_code,
 				'response-message' => $eway_response,
 				'pgi-transaction-id' => $eway_transaction_id,
