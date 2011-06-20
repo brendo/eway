@@ -152,7 +152,7 @@
 			// Create a document for the result and load the result
 			$eway_result = new DOMDocument('1.0', 'utf-8');
 			$eway_result->formatOutput = true;
-			$eway_result->loadXML(General::sanitize($response));
+			$eway_result->loadXML($response);
 			$eway_result_xpath = new DOMXPath($eway_result);
 
 			// Generate status result:
