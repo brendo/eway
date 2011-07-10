@@ -2,16 +2,7 @@
 
 	require_once EXTENSIONS . '/eway/lib/class.api.php';
 
-	Class HostedPaymentsCVNSettings extends PGI_MethodConfiguration {
-
-		/**
-		 * Returns the CustomerID depending on the gateway mode.
-		 */
-		public static function getCustomerId() {
-			return (eWayAPI::isTesting())
-				? eWayAPI::DEVELOPMENT_CUSTOMER_ID
-				: (string)Symphony::Configuration()->get("production-customer-id", 'eway');
-		}
+	Class HostedPaymentsCVNSettings extends eWaySettings {
 
 		public static function getGatewayURI() {
 			return (eWayAPI::isTesting())
@@ -59,19 +50,6 @@
 				'ewayCVN'
 			);
 		}
-
-		/**
-		 * @link http://www.eway.com.au/Developer/payment-code/transaction-results-response-codes.aspx
-		 */
-		public static function getApprovedCodes() {
-			return array(
-				'00', // Transaction Approved
-				'08', // Honour with Identification
-				'10', // Approved for Partial Amount
-				'11', // Approved, VIP
-				'16', // Approved, Update Track 3
-			);
-		}
 	}
 
 	Class HostedPaymentsCVN extends PGI_Request {
@@ -93,7 +71,7 @@
 		public static function processPayment(array $values = array()) {
 			// Merge Defaults and passed values
 			$request_array = array_merge(HostedPaymentsCVNSettings::getDefaults(), $values);
-			$request_array['ewayCustomerID'] = HostedPaymentsCVNSettings::getCustomerID();
+			$request_array['ewayCustomerID'] = eWaySettings::getCustomerID();
 			$request_array = array_intersect_key($request_array, HostedPaymentsCVNSettings::getDefaults());
 
 			// Check for missing fields
@@ -149,34 +127,7 @@
 	Class HostedPaymentsCVNResponse extends eWayResponse {
 
 		public function parseResponse($response) {
-			// Create a document for the result and load the result
-			$eway_result = new DOMDocument('1.0', 'utf-8');
-			$eway_result->formatOutput = true;
-			$eway_result->loadXML($response);
-			$eway_result_xpath = new DOMXPath($eway_result);
-
-			// Generate status result:
-			$eway_transaction_id   = $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnNumber)');
-			$bank_authorisation_id = $eway_result_xpath->evaluate('string(/ewayResponse/ewayAuthCode)');
-
-			$eway_approved = 'true' == strtolower($eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnStatus)'));
-
-			// eWay responses come back like 00,Transaction Approved(Test CVN Gateway)
-			// It's important to known that although it's called ewayTrxnError, Error's can be 'good' as well
-			$eway_return = explode(',', $eway_result_xpath->evaluate('string(/ewayResponse/ewayTrxnError)'), 2);
-
-			// Get the code
-			$eway_code = is_numeric($eway_return[0]) ? array_shift($eway_return) : '';
-			// Get the response
-			$eway_response = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_return));
-
-			// Hoorah, we spoke to eway, lets return what they said
-			return array(
-				'status' => in_array($eway_code, HostedPaymentsCVNSettings::getApprovedCodes()) ? __('Approved') : __('Declined'),
-				'response-code' => $eway_code,
-				'response-message' => $eway_response,
-				'pgi-transaction-id' => $eway_transaction_id,
-				'bank-authorisation-id' => $bank_authorisation_id
-			);
+			return parent::parseResponse($response);
 		}
+
 	}

@@ -1,30 +1,6 @@
 <?php
 
-	Abstract Class PGI_MethodConfiguration {
-		abstract static function getGatewayURI();
-		abstract static function getDefaults();
-		abstract static function getRequiredFields();
-		abstract static function getApprovedCodes();
-	}
-
-	Abstract Class PGI_Request {
-		public static function start($uri, $xml) {
-			// Curl
-			require_once(TOOLKIT . '/class.gateway.php');
-			$curl = new Gateway;
-			$curl->init($uri);
-			$curl->setopt('POST', true);
-			$curl->setopt('POSTFIELDS', $xml);
-			$curl->setopt('TIMEOUT', 60);
-
-			return $curl;
-		}
-	}
-
-	Abstract Class PGI_Response {
-		const GATEWAY_ERROR = 100;
-		const DATA_ERROR = 200;
-	}
+	require_once EXTENSIONS . '/eway/lib/class.apistructure.php';
 
 	Class eWayAPI {
 
@@ -42,20 +18,51 @@
 		}
 
 	/*-------------------------------------------------------------------------
-		Process Transaction:
+		API Methods:
 	-------------------------------------------------------------------------*/
 
 		public static function processPayment(array $values = array()) {
-			require_once EXTENSIONS . '/eway/lib/class.hostedpaymentscvn.php';
+			require_once EXTENSIONS . '/eway/lib/method.hostedpaymentscvn.php';
 
 			return HostedPaymentsCVN::processPayment($values);
 		}
 
+		public static function refundTransaction(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.xmlpaymentrefund.php';
+
+			return XMLPaymentRefund::refundTransaction($values);
+		}
+	}
+
+	Abstract Class eWaySettings extends PGI_MethodConfiguration {
+
+		/**
+		 * Returns the CustomerID depending on the gateway mode.
+		 */
+		public static function getCustomerId() {
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_CUSTOMER_ID
+				: (string)Symphony::Configuration()->get("production-customer-id", 'eway');
+		}
+
+		/**
+		 * @link http://www.eway.com.au/Developer/payment-code/transaction-results-response-codes.aspx
+		 */
+		public static function getApprovedCodes() {
+			return array(
+				'00', // Transaction Approved
+				'08', // Honour with Identification
+				'10', // Approved for Partial Amount
+				'11', // Approved, VIP
+				'16', // Approved, Update Track 3
+			);
+		}
 	}
 
 	Class eWayResponse extends PGI_Response {
 		private $response = array();
 		private $gateway_response = array();
+		private $xpath = null;
 
 		public function __construct($response) {
 			if(!is_array($response)) {
@@ -68,6 +75,38 @@
 			else {
 				$this->response = $response;
 			}
+		}
+
+		public function parseResponse($response) {
+			// Create a document for the result and load the result
+			$eway_result = new DOMDocument('1.0', 'utf-8');
+			$eway_result->formatOutput = true;
+			$eway_result->loadXML($response);
+			$this->xpath = new DOMXPath($eway_result);
+
+			// Generate status result:
+			$eway_transaction_id   = $this->xpath->evaluate('string(/ewayResponse/ewayTrxnNumber)');
+			$bank_authorisation_id = $this->xpath->evaluate('string(/ewayResponse/ewayAuthCode)');
+
+			$eway_approved = 'true' == strtolower($this->xpath->evaluate('string(/ewayResponse/ewayTrxnStatus)'));
+
+			// eWay responses come back like 00,Transaction Approved(Test CVN Gateway)
+			// It's important to known that although it's called ewayTrxnError, Error's can be 'good' as well
+			$eway_return = explode(',', $this->xpath->evaluate('string(/ewayResponse/ewayTrxnError)'), 2);
+
+			// Get the code
+			$eway_code = is_numeric($eway_return[0]) ? array_shift($eway_return) : '';
+			// Get the response
+			$eway_response = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_return));
+
+			// Hoorah, we spoke to eway, lets return what they said
+			return array(
+				'status' => in_array($eway_code, eWaySettings::getApprovedCodes()) ? __('Approved') : __('Declined'),
+				'response-code' => $eway_code,
+				'response-message' => $eway_response,
+				'pgi-transaction-id' => $eway_transaction_id,
+				'bank-authorisation-id' => $bank_authorisation_id
+			);
 		}
 
 	/*-------------------------------------------------------------------------
