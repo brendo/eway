@@ -9,7 +9,7 @@
 			return array(
 				'name' => 'eWay Payment Gateway',
 				'version' => '0.1',
-				'release-date' => 'unreleased'
+				'release-date' => '2011-12-14'
 			);
 		}
 
