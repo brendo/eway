@@ -4,24 +4,6 @@
 
 	class Extension_eWay extends Extension {
 
-		public function about() {
-			return array(
-				'name' => 'eWay',
-				'version' => '0.1',
-				'release-date' => '2011-12-14',
-				'author' => array(
-					array(
-						'name' => 'Brendan Abbott',
-						'email' => 'brendan@bloodbone.ws'
-					),
-					array(
-						'name' => 'Henry Singleton'
-					)
-				),
-				'description' => 'Manage and track payments using eWAY.'
-			);
-		}
-
 	/*-------------------------------------------------------------------------
 		Definition:
 	-------------------------------------------------------------------------*/
@@ -29,12 +11,14 @@
 		public function install() {
 			Symphony::Configuration()->set('production-customer-id', '', 'eway');
 			Symphony::Configuration()->set('gateway-mode', 'development', 'eway');
-			Administration::instance()->saveConfig();
+
+			return Symphony::Configuration()->write();
 		}
 
 		public function uninstall() {
 			Symphony::Configuration()->remove('eway');
-			Administration::instance()->saveConfig();
+
+			return Symphony::Configuration()->write();
 		}
 
 		public function getSubscribedDelegates() {
@@ -57,8 +41,9 @@
 	-------------------------------------------------------------------------*/
 
 		public static function getFields($section_id) {
-			$sectionManager = new SectionManager(Frontend::instance());
-			$section = $sectionManager->fetch($section_id);
+			require_once TOOLKIT . '/class.sectionmanager.php';
+
+			$section = SectionManager::fetch($section_id);
 
 			if (!($section instanceof Section)) return array();
 
@@ -78,8 +63,9 @@
 		}
 
 		public static function fetchEntry($entries) {
-			$entryManager = new EntryManager(Frontend::instance());
-			$entries = $entryManager->fetch($entries);
+			require_once TOOLKIT . '/class.entrymanager.php';
+
+			$entries = EntryManager::fetch($entries);
 
 			foreach ($entries as $order => $entry) {
 				$section_id = $entry->get('section_id');
@@ -154,7 +140,7 @@
 			Symphony::Configuration()->set('production-customer-id', $settings['eway']['production-customer-id'], 'eway');
 			Symphony::Configuration()->set('gateway-mode', $settings['eway']['gateway-mode'], 'eway');
 
-			Administration::instance()->saveConfig();
+			return Symphony::Configuration()->write();
 		}
 
 	}
