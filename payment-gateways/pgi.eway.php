@@ -31,6 +31,8 @@
 
 			$fieldset = current($context['wrapper']->getChildren());
 
+			if(!is_a($fieldset, 'XMLElement')) return $fieldset;
+
 			$fieldset->setAttribute('class', 'settings pgi-pickable');
 			$fieldset->setAttribute('id', 'eway');
 

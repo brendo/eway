@@ -60,11 +60,12 @@
 	}
 
 	Class eWayResponse extends PGI_Response {
-		private $response = array();
-		private $gateway_response = array();
-		private $xpath = null;
+		protected $response = array();
+		protected $gateway_response = array();
+		protected $xpath = null;
+		protected $request = null;
 
-		public function __construct($response) {
+		public function __construct($response, $request = null) {
 			if(!is_array($response)) {
 				$this->gateway_response = $response;
 
@@ -75,6 +76,8 @@
 			else {
 				$this->response = $response;
 			}
+
+			$this->request = $request;
 		}
 
 		public function parseResponse($response) {
@@ -125,6 +128,18 @@
 				: null;
 		}
 
+		public function getResponse($returnParsedResponse = true) {
+			return ($returnParsedResponse === true)
+				? $this->response
+				: $this->gateway_response;
+		}
+
+		public function getRequest() {
+			return isset($this->request)
+				? $this->request->asXML()
+				: null;
+		}
+
 		public function getSuccess() {
 			return ($this->isSuccessful())
 				? array(
@@ -132,12 +147,6 @@
 						'bank-authorisation-id' => $this->response['bank-authorisation-id']
 					)
 				: false;
-		}
-
-		public function getResponse($returnParsedResponse = true) {
-			return ($returnParsedResponse === true)
-				? $this->response
-				: $this->gateway_response;
 		}
 
 		public function addToEventXML(XMLElement $event_xml) {

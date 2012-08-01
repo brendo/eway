@@ -116,11 +116,11 @@
 					'response-code' => PGI_Response::GATEWAY_ERROR,
 					'response-message' => __('There was an error connecting to eWay.'),
 					'curl-info' => $info
-				));
+				), $eway_request_xml);
 			}
 
 			// Gateway connected, request sent, lets get the response
-			else return new HostedPaymentsCVNResponse($curl_result);
+			else return new HostedPaymentsCVNResponse($curl_result, $eway_request_xml);
 		}
 	}
 
