@@ -10,6 +10,8 @@
 
 		public function install() {
 			Symphony::Configuration()->set('production-customer-id', '', 'eway');
+			Symphony::Configuration()->set('production-merchant-id', '', 'eway');
+			Symphony::Configuration()->set('production-merchant-password', '', 'eway');
 			Symphony::Configuration()->set('gateway-mode', 'development', 'eway');
 
 			return Symphony::Configuration()->write();
@@ -113,6 +115,20 @@
 				Widget::Input('settings[eway][production-customer-id]', Symphony::Configuration()->get("production-customer-id", 'eway'))
 			);
 			$div->appendChild($label);
+            
+			// Merchant ID
+			$label = new XMLElement('label', __('Merchant ID'));
+			$label->appendChild(
+				Widget::Input('settings[eway][production-merchant-id]', Symphony::Configuration()->get("production-merchant-id", 'eway'))
+			);
+			$div->appendChild($label);
+            
+			// Merchant Password ID
+			$label = new XMLElement('label', __('Merchant Password ID'));
+			$label->appendChild(
+				Widget::Input('settings[eway][production-merchant-password]', Symphony::Configuration()->get("production-merchant-password", 'eway'), 'password')
+			);
+			$div->appendChild($label);
 
 			// Build the Gateway Mode
 			$label = new XMLElement('label', __('Gateway Mode'));
@@ -138,6 +154,8 @@
 
 			// Active Section
 			Symphony::Configuration()->set('production-customer-id', $settings['eway']['production-customer-id'], 'eway');
+			Symphony::Configuration()->set('production-merchant-id', $settings['eway']['production-merchant-id'], 'eway');
+			Symphony::Configuration()->set('production-merchant-password', $settings['eway']['production-merchant-password'], 'eway');
 			Symphony::Configuration()->set('gateway-mode', $settings['eway']['gateway-mode'], 'eway');
 
 			return Symphony::Configuration()->write();
