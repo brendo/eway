@@ -8,6 +8,20 @@
 		 * @link http://www.eway.com.au/Developer/testing/
 		 */
 		const DEVELOPMENT_CUSTOMER_ID = '87654321';
+        
+        /**
+         * Constant used for Recurring Payments.
+         * 
+         * @link http://www.eway.com.au/docs/api-documentation/rebill-web-service.pdf?sfvrsn=2
+         */
+        const DEVELOPMENT_MERCHANT_ID = 'test@eway.com.au';
+        
+        /**
+         * Constant used for Recurring Payments.
+         * 
+         * @link http://www.eway.com.au/docs/api-documentation/rebill-web-service.pdf?sfvrsn=2
+         */
+        const DEVELOPMENT_MERCHANT_PASSWORD = 'test123';
 
 	/*-------------------------------------------------------------------------
 		Utilities
@@ -27,6 +41,36 @@
 			return HostedPaymentsCVN::processPayment($values);
 		}
 
+		public static function createRebillCustomerID(array $customer = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::createRebillCustomer($customer);
+		}
+
+		public static function createRebillEvent(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::createRebillEvent($values);
+		}
+        
+		public static function updateRebillEvent(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::updateRebillEvent($values);
+		}
+
+		public static function queryNextTransaction($rebillCustomerID, $rebillID) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::queryNextTransaction($rebillCustomerID, $rebillID);
+		}
+        
+		public static function deleteRebillEvent($rebillCustomerID, $rebillID) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::deleteRebillEvent($rebillCustomerID, $rebillID);
+		}
+        
+		public static function queryTransactions() {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::queryTransactions($rebillCustomerID, $rebillID);
+		}
+        
 		public static function refundTransaction(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.xmlpaymentrefund.php';
 
@@ -43,6 +87,24 @@
 			return (eWayAPI::isTesting())
 				? eWayAPI::DEVELOPMENT_CUSTOMER_ID
 				: (string)Symphony::Configuration()->get("production-customer-id", 'eway');
+		}
+
+		/**
+		 * Returns the Merchant Email depending on the gateway mode.
+		 */
+		public static function getMerchantId() {
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_MERCHANT_ID
+				: (string)Symphony::Configuration()->get("production-merchant-id", 'eway');
+		}
+
+		/**
+		 * Returns the Merchant Password depending on the gateway mode.
+		 */
+		public static function getMerchantPassword() {
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_MERCHANT_PASSWORD
+				: (string)Symphony::Configuration()->get("production-merchant-password", 'eway');
 		}
 
 		/**
@@ -109,6 +171,31 @@
 				'response-message' => $eway_response,
 				'pgi-transaction-id' => $eway_transaction_id,
 				'bank-authorisation-id' => $bank_authorisation_id
+			);
+		}
+        
+		public function parseRecurringResponse($response) {
+            
+            // Create a document for the result and load the result
+			$eway_result = new DOMDocument('1.0', 'utf-8');
+			$eway_result->formatOutput = true;
+			$eway_result->loadXML($response);
+			$this->xpath = new DOMXPath($eway_result);
+            
+			// Generate status result:            
+			//$test   = $this->xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
+            $result = $this->xpath->evaluate('string(//CreateRebillCustomerResult/Result)');
+            echo "####" . $result . "####"; 
+            
+			$eway_transaction_id   = $this->xpath->evaluate('string(/CreateRebillCustomerResult/Result)');
+			$RebillCustomerID = $this->xpath->evaluate('string(/CreateRebillCustomerResult/RebillCustomerID)');
+
+			$eway_approved = 'Success' == strtolower($this->xpath->evaluate('string(/CreateRebillCustomerResult/Result)'));
+
+			// Hoorah, we spoke to eway, lets return what they said
+			return array(
+				'status' => $eway_approved ? "Success" : __('Declined'),
+				'RebillCustomerID' => $RebillCustomerID
 			);
 		}
 
