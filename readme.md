@@ -17,6 +17,10 @@ An interface for eWay's Merchant Hosted Payments CVN API. Developers can use thi
 
 4. Have a read of the [API](https://github.com/brendo/eway/wiki/API-Reference)
 
+## Recurring
+
+This version is extended to accept Recurring Payments using eWay.
+
 ## Credits
 
 Extension is largely based on previous work by Henry Singleton and his Secure Pay extension, I've taken it an applied some paint for Symphony 2.2 and hope to expand to include other eWay API products.
