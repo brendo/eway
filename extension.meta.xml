@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension id="eway" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
 	<name>eWay</name>
-	<description>An interface for eWay's Merchant Hosted Payments CVN API. Developers can use this to process payments from custom events.</description>
-	<repo type="github">https://github.com/brendo/eway</repo>
+	<description>An interface for eWay's Merchant Hosted Payments CVN API. Developers can use this to process payments from custom events and recurring payments.</description>
+	<repo type="github">https://github.com/abocati/eway</repo>
 	<types>
 		<type>Workflow</type>
 	</types>
@@ -14,10 +14,14 @@
 		<author>
 			<name github="henrysingleton" symphony="Henry">Henry Singleton</name>
 		</author>
+		<author>
+			<name github="abocati" symphony="abocati">Andre Bocati</name>
+		</author>
 	</authors>
 	<releases>
-		<release version="0.2" date="2012-05-29" min="2.3">
+		<release version="0.3" date="2012-10-11" min="2.3">
 			- Symphony 2.3 compatibility
+			- eWay Recurring compatibility
 		</release>
 		<release version="0.1" date="2011-12-14" min="2.2" max="2.2.x" />
 	</releases>
