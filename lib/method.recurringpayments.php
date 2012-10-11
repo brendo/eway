@@ -158,7 +158,7 @@
                 }                    
             }
         }
-        
+               
         /**
          * Create a new Rebill Event.
          *
@@ -167,6 +167,11 @@
          * @return RebillID
          */
         public static function createRebillEvent (array $values = array()) {
+
+            // Find out the correct frequency values.
+            $frequency = self::getFrequency($values['frequency']);
+            $values['RebillInterval'] = $frequency['RebillInterval'];
+            $values['RebillIntervalType'] = $frequency['RebillIntervalType'];
             
             // Check for missing fields
             $valid_data = true;
@@ -251,6 +256,11 @@
          * @return boolean
          */
         public static function updateRebillEvent (array $values = array()) {
+            
+            // Find out the correct frequency values.
+            $frequency = self::getFrequency($values['frequency']);
+            $values['RebillInterval'] = $frequency['RebillInterval'];
+            $values['RebillIntervalType'] = $frequency['RebillIntervalType'];            
             
             // Check for missing fields
             $valid_data = true;
@@ -511,6 +521,35 @@
 
             }  
         }
+        
+        /**
+         * Find out type of payment frequency for eWay.
+         * 
+         * @param int $type Type of payment:  1 => Weekly,  2 => Fortnightly, 3 => Montly and 4 => Yearly
+         * @return array
+         */
+        public static function getFrequency($type) {
+            $data = array();
+            switch ($type) {
+                case 1: // Weekly
+                    $data['RebillInterval'] = 1;
+                    $data['RebillIntervalType'] = 2;
+                    break;
+                case 2: // Fortnighly
+                    $data['RebillInterval'] = 2;
+                    $data['RebillIntervalType'] = 2;
+                    break;
+                case 3: // Montly
+                    $data['RebillInterval'] = 1;
+                    $data['RebillIntervalType'] = 3;
+                    break;
+                case 4: // Yearly
+                    $data['RebillInterval'] = 1;
+                    $data['RebillIntervalType'] = 4;
+                    break;
+            }
+            return $data;
+        }        
         
 	}
 
