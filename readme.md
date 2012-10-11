@@ -19,7 +19,8 @@ An interface for eWay's Merchant Hosted Payments CVN API. Developers can use thi
 
 ## Recurring
 
-This version is extended to accept Recurring Payments using eWay.
+- This version is extended to accept Recurring Payments using eWay.
+- Have a read of the [WIKI](https://github.com/abocati/eway/wiki/Recurring)
 
 ## Credits
 
