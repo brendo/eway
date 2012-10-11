@@ -66,14 +66,13 @@
 			return RecurringPayments::deleteRebillEvent($rebillCustomerID, $rebillID);
 		}
         
-		public static function queryTransactions() {
+		public static function queryTransactions($rebillCustomerID, $rebillID) {
 			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
 			return RecurringPayments::queryTransactions($rebillCustomerID, $rebillID);
 		}
         
 		public static function refundTransaction(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.xmlpaymentrefund.php';
-
 			return XMLPaymentRefund::refundTransaction($values);
 		}
 	}

@@ -48,6 +48,7 @@
                 'RebillEndDate',		
 			);
         }
+
         /**
          * Required fields to update a rebill event.
          * @return type
@@ -79,7 +80,7 @@
          * 
          * @param array $values Array of values containing the Customer's details to create a new rebill customer.
          * 
-         * @return \RecurringPaymentsResponse
+         * @return RebillCustomerID
          */
         public static function createRebillCustomer(array $values = array()) {
             
@@ -160,7 +161,10 @@
         
         /**
          * Create a new Rebill Event.
+         *
          * @param array $values
+         * 
+         * @return RebillID
          */
         public static function createRebillEvent (array $values = array()) {
             
@@ -243,6 +247,8 @@
          * Update a Rebill Event.
          * 
          * @param array $values
+         * 
+         * @return boolean
          */
         public static function updateRebillEvent (array $values = array()) {
             
@@ -305,25 +311,141 @@
                 if ($result == "Success") {
                     return true;
                 } else{
+                    // Error from the API.
+                    $error = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ErrorDetails)');                    
+                    return new RecurringPaymentsResponse(array(
+                        'status' => __('Gateway error'),
+                        'response-code' => PGI_Response::GATEWAY_ERROR,
+                        'response-message' => $error,
+                        'curl-info' => $status
+                    ), $response);
+                }                    
+            }           
+        } 
+
+        /**
+         * Delete existing rebill event.
+         * 
+         * @param type $rebillCustomerID
+         * @param type $rebillID
+         * 
+         * @return boolean
+         */
+        public static function deleteRebillEvent($rebillCustomerID, $rebillID) {
+            
+            if (!$rebillCustomerID) return;
+            if (!$rebillID)         return;
+            
+            $eway_request_xml = simplexml_load_string('<DeleteRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            $eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
+            $eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
+            
+            // Execute the transaction.
+            $ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
+
+            $curl_result = curl_exec($ch);
+            $status = curl_getinfo($ch);
+
+            if (curl_errno($ch)) {
+                // The Gateway did not connect to eWay successfully or some error occurred.
+                return new RecurringPaymentsResponse(array(
+                    'status' => __('Gateway error'),
+                    'response-code' => PGI_Response::GATEWAY_ERROR,
+                    'response-message' => __('There was an error connecting to eWay.'),
+                    'curl-info' => $info
+                ), $eway_request_xml);
+            } 
+            else {
+                
+                curl_close($ch);
+
+                $dom = new DOMDocument();
+                $response = $curl_result;
+
+                $dom->loadXML($response);
+                $xpath = new DOMXPath($dom);
+
+                $xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+                $xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
+                $result = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:Result)');
+                
+                // Return a boolean in case of success.
+                if ($result == "Success") {
+                    return true;
+                } else{
                     return new RecurringPaymentsResponse(array(
                         'status' => __('Gateway error'),
                         'response-code' => PGI_Response::GATEWAY_ERROR,
                         'response-message' => __('There was an error updating a reBill event.'),
                         'curl-info' => $status
                     ), $response);
-                }                    
-            }           
-        }           
+                }  
+
+            }  
+        }          
         
         /**
          * Query transaction details for specified rebill event. StartDate, EndDate and Status are optional values.
          * 
          * @param type $rebillCustomerID
-         * @param type $rebillID
-         * @return \RecurringPaymentsResponse
-         */
-        public static function queryTransactions ($rebillCustomerID, $rebillID) {
-        }   
+         * @param type $rebillID         
+         * 
+         * @return \RecurringPaymentsResponse|array
+         */        
+        public static function queryTransactions ($rebillCustomerID, $rebillID) {            
+
+            if (!$rebillCustomerID) return;
+            if (!$rebillID)         return;
+            
+			$eway_request_xml = simplexml_load_string('<QueryTransactions xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            $eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
+            $eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
+            
+            // Execute the transaction.
+            $ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
+
+            $curl_result = curl_exec($ch);
+            $status = curl_getinfo($ch);
+
+            if (curl_errno($ch)) {
+                // The Gateway did not connect to eWay successfully or some error occurred.
+                return new RecurringPaymentsResponse(array(
+                    'status' => __('Gateway error'),
+                    'response-code' => PGI_Response::GATEWAY_ERROR,
+                    'response-message' => __('There was an error connecting to eWay.'),
+                    'curl-info' => $info
+                ), $eway_request_xml);
+            } 
+            else {
+                
+                curl_close($ch);
+
+                $dom = new DOMDocument();
+                $response = $curl_result;
+
+                $dom->loadXML($response);
+                $xpath = new DOMXPath($dom);
+
+                $xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+                $xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
+
+                $QueryTransactionsResult = $xpath->query('/soap:Envelope/soap:Body//eway:QueryTransactionsResult');
+                
+                // Build an array with old/future transactions.
+                $queries = array();
+                foreach($QueryTransactionsResult as $node) {
+                    foreach ($node->childNodes as $child) {
+                        foreach ($child->childNodes as $a) {
+                            $values[$a->nodeName] = $a->nodeValue; 
+                        }
+                        array_push($queries, $values);
+                    }
+                }
+                
+                // Return an array with the transactions.
+                return $queries;
+            } 
+        } 
         
         /**
          * Query the next transaction existing rebill event.
@@ -331,7 +453,7 @@
          * @param type $rebillCustomerID
          * @param type $rebillID
          * 
-         * @return \RecurringPaymentsResponse
+         * @return array
          */
         public static function queryNextTransaction ($rebillCustomerID, $rebillID) {
             
@@ -389,67 +511,6 @@
 
             }  
         }
-
-        /**
-         * Delete existing rebill event.
-         * 
-         * @param type $rebillCustomerID
-         * @param type $rebillID
-         * 
-         * @return boolean
-         */
-        public static function deleteRebillEvent($rebillCustomerID, $rebillID) {
-            
-            if (!$rebillCustomerID) return;
-            if (!$rebillID)         return;
-            
-			$eway_request_xml = simplexml_load_string('<DeleteRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
-            $eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
-            $eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
-            
-            // Execute the transaction.
-            $ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
-
-            $curl_result = curl_exec($ch);
-            $status = curl_getinfo($ch);
-
-            if (curl_errno($ch)) {
-                // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
-                    'status' => __('Gateway error'),
-                    'response-code' => PGI_Response::GATEWAY_ERROR,
-                    'response-message' => __('There was an error connecting to eWay.'),
-                    'curl-info' => $info
-                ), $eway_request_xml);
-            } 
-            else {
-                
-                curl_close($ch);
-
-                $dom = new DOMDocument();
-                $response = $curl_result;
-
-                $dom->loadXML($response);
-                $xpath = new DOMXPath($dom);
-
-                $xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
-                $xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
-                $result = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:Result)');
-                
-                // Return a boolean in case of success.
-                if ($result == "Success") {
-                    return true;
-                } else{
-                    return new RecurringPaymentsResponse(array(
-                        'status' => __('Gateway error'),
-                        'response-code' => PGI_Response::GATEWAY_ERROR,
-                        'response-message' => __('There was an error updating a reBill event.'),
-                        'curl-info' => $status
-                    ), $response);
-                }  
-
-            }  
-        }        
         
 	}
 
