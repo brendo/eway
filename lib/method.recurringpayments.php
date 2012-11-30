@@ -23,8 +23,7 @@
 				'customerTitle',
 				'customerFirstName',
 				'customerLastName',
-				'customerEmail',
-				'customerURL'
+				'customerEmail'
 			);
         }
        
