@@ -166,7 +166,7 @@
          * @return RebillID
          */
         public static function createRebillEvent (array $values = array()) {
-
+            
             // Find out the correct frequency values.
             $frequency = self::getFrequency($values['frequency']);
             $values['RebillInterval'] = $frequency['RebillInterval'];
@@ -185,12 +185,12 @@
 
             // The data is invalid, return a `DATA_ERROR`
             if(!$valid_data) {
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Data error'),
                     'response-code' => PGI_Response::DATA_ERROR,
                     'response-message' => __('Missing Fields: %s', array(implode(', ', $missing_fields))),
                     'missing-fields' => $missing_fields
-                ));
+                );
             }
             
 			$eway_request_xml = simplexml_load_string('<CreateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
@@ -219,7 +219,7 @@
 
                 $dom = new DOMDocument();
                 $response = $curl_result;
-
+               
                 $dom->loadXML($response);
                 $xpath = new DOMXPath($dom);
 
@@ -522,33 +522,32 @@
         }
         
         /**
-         * Find out type of payment frequency for eWay.
+         * Setup the correct fields for eWay.
          * 
-         * @param int $type Type of payment:  1 => Weekly,  2 => Fortnightly, 3 => Montly and 4 => Yearly
-         * @return array
+         * @param type $type    Type of payment: Weekly, Fortnightly, Montly or Yearly.
+         * @return int
          */
         public static function getFrequency($type) {
-            $data = array();
-            switch ($type) {
-                case 1: // Weekly
+            switch (strtolower($type)) {
+                case "weekly":
                     $data['RebillInterval'] = 1;
-                    $data['RebillIntervalType'] = 2;
+                    $data['RebillIntervalType'] = 1;
                     break;
-                case 2: // Fortnighly
+                case "fortnightly":
                     $data['RebillInterval'] = 2;
                     $data['RebillIntervalType'] = 2;
                     break;
-                case 3: // Montly
+                case "monthly":
                     $data['RebillInterval'] = 1;
                     $data['RebillIntervalType'] = 3;
                     break;
-                case 4: // Yearly
+                case "yearly":
                     $data['RebillInterval'] = 1;
                     $data['RebillIntervalType'] = 4;
                     break;
             }
             return $data;
-        }        
+        }  
         
 	}
 
