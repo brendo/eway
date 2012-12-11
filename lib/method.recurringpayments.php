@@ -1,14 +1,14 @@
 <?php
 
-	require_once EXTENSIONS . '/eway/lib/class.api.php';
+    require_once EXTENSIONS . '/eway/lib/class.api.php';
 
-	Class RecurringPaymentsSettings extends eWaySettings {
+    Class RecurringPaymentsSettings extends eWaySettings {
 
-		public static function getGatewayURI() {
-			return (eWayAPI::isTesting())
-				? 'https://www.eway.com.au/gateway/rebill/test/managerebill_test.asmx'
-				: 'https://www.eway.com.au/gateway/rebill/upload.aspx';
-		}
+        public static function getGatewayURI() {
+            return (eWayAPI::isTesting())
+                ? 'https://www.eway.com.au/gateway/rebill/test/managerebill_test.asmx'
+                : 'https://www.eway.com.au/gateway/rebill/upload.aspx';
+        }
 
         public static function getDefaults() {}
 
@@ -19,12 +19,12 @@
          * @return type
          */
         public static function getRequiredCreateRebillCustomer() {
-			return array(
-				'customerTitle',
-				'customerFirstName',
-				'customerLastName',
-				'customerEmail'
-			);
+            return array(
+                'customerTitle',
+                'customerFirstName',
+                'customerLastName',
+                'customerEmail'
+            );
         }
        
         /**
@@ -32,20 +32,20 @@
          * @return type
          */
         public static function getRequiredCreateRebillEvent() {
-			return array(
-                'RebillCustomerID',	
-                'RebillCCName',		
-                'RebillCCNumber', 	
-                'RebillCCExpMonth', 	
-                'RebillCCExpYear',	
-                'RebillInitAmt',		
-                'RebillInitDate',	
-                'RebillRecurAmt',	
-                'RebillStartDate',	
-                'RebillInterval',	
+            return array(
+                'RebillCustomerID', 
+                'RebillCCName',     
+                'RebillCCNumber',   
+                'RebillCCExpMonth',     
+                'RebillCCExpYear',  
+                'RebillInitAmt',        
+                'RebillInitDate',   
+                'RebillRecurAmt',   
+                'RebillStartDate',  
+                'RebillInterval',   
                 'RebillIntervalType',
-                'RebillEndDate',		
-			);
+                'RebillEndDate',        
+            );
         }
 
         /**
@@ -53,26 +53,26 @@
          * @return type
          */
         public static function getRequiredUpdateRebillEvent() {
-			return array(
-                'RebillCustomerID',	
-                'RebillID',	
-                'RebillCCName',		
-                'RebillCCNumber', 	
-                'RebillCCExpMonth', 	
-                'RebillCCExpYear',	
-                'RebillInitAmt',		
-                'RebillInitDate',	
-                'RebillRecurAmt',	
-                'RebillStartDate',	
-                'RebillInterval',	
+            return array(
+                'RebillCustomerID', 
+                'RebillID', 
+                'RebillCCName',     
+                'RebillCCNumber',   
+                'RebillCCExpMonth',     
+                'RebillCCExpYear',  
+                'RebillInitAmt',        
+                'RebillInitDate',   
+                'RebillRecurAmt',   
+                'RebillStartDate',  
+                'RebillInterval',   
                 'RebillIntervalType',
-                'RebillEndDate',		
-			);
+                'RebillEndDate',        
+            );
         }
         
-	}
+    }
 
-	Class RecurringPayments extends Recurring_Request {
+    Class RecurringPayments extends Recurring_Request {
        
         /**
          * Create a new Rebill Customer.
@@ -104,10 +104,10 @@
                 ));
             }              
 
-			$eway_request_xml = simplexml_load_string('<CreateRebillCustomer xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
-			foreach($values as $field_name => $field_data) {
-				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
-			}
+            $eway_request_xml = simplexml_load_string('<CreateRebillCustomer xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            foreach($values as $field_name => $field_data) {
+                $eway_request_xml->addChild($field_name, General::sanitize($field_data));
+            }
             
             // Execute the transaction.
             $ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
@@ -193,10 +193,10 @@
                 );
             }
             
-			$eway_request_xml = simplexml_load_string('<CreateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
-			foreach($values as $field_name => $field_data) {
-				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
-			}
+            $eway_request_xml = simplexml_load_string('<CreateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            foreach($values as $field_name => $field_data) {
+                $eway_request_xml->addChild($field_name, General::sanitize($field_data));
+            }
             
             // Execute the transaction.
             $ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
@@ -282,10 +282,10 @@
                 ));
             }
             
-			$eway_request_xml = simplexml_load_string('<UpdateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
-			foreach($values as $field_name => $field_data) {
-				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
-			}
+            $eway_request_xml = simplexml_load_string('<UpdateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            foreach($values as $field_name => $field_data) {
+                $eway_request_xml->addChild($field_name, General::sanitize($field_data));
+            }
             
             // Execute the transaction.
             $ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
@@ -406,7 +406,7 @@
             if (!$rebillCustomerID) return;
             if (!$rebillID)         return;
             
-			$eway_request_xml = simplexml_load_string('<QueryTransactions xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            $eway_request_xml = simplexml_load_string('<QueryTransactions xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
             $eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
             $eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
             
@@ -469,7 +469,7 @@
             if (!$rebillCustomerID) return;
             if (!$rebillID)         return;
             
-			$eway_request_xml = simplexml_load_string('<QueryNextTransaction xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+            $eway_request_xml = simplexml_load_string('<QueryNextTransaction xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
             $eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
             $eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
             
@@ -549,12 +549,12 @@
             return $data;
         }  
         
-	}
+    }
 
-	Class RecurringPaymentsResponse extends eWayResponse {
+    Class RecurringPaymentsResponse extends eWayResponse {
 
-		public function parseResponse($response) {
-			return parent::parseRecurringResponse($response);
-		}
+        public function parseResponse($response) {
+            return parent::parseRecurringResponse($response);
+        }
 
-	}
+    }
