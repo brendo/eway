@@ -96,12 +96,12 @@
 
             // The data is invalid, return a `DATA_ERROR`
             if(!$valid_data) {
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Data error'),
                     'response-code' => PGI_Response::DATA_ERROR,
                     'response-message' => __('Missing Fields: %s', array(implode(', ', $missing_fields))),
                     'missing-fields' => $missing_fields
-                ));
+                );
             }              
 
             $eway_request_xml = simplexml_load_string('<CreateRebillCustomer xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
@@ -117,12 +117,12 @@
             
             if (curl_errno($ch)) {
                 // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
                     'curl-info' => $info
-                ), $eway_request_xml);
+                );
             } 
             else {
                 
@@ -148,12 +148,12 @@
                 if ($result == "Success") {
                     return $customerId;
                 } else{
-                    return new RecurringPaymentsResponse(array(
+                    return array(
                         'status' => __('Gateway error'),
                         'response-code' => PGI_Response::GATEWAY_ERROR,
                         'response-message' => __('There was an error creating a new reBill customer.'),
                         'curl-info' => $status
-                    ), $response);
+                    );
                 }                    
             }
         }
@@ -206,12 +206,12 @@
             
             if (curl_errno($ch)) {
                 // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
                     'curl-info' => $info
-                ), $eway_request_xml);
+                );
             } 
             else {
                 
@@ -237,12 +237,12 @@
                 if ($result == "Success") {
                     return $rebillID;
                 } else{
-                    return new RecurringPaymentsResponse(array(
+                    return array(
                         'status' => __('Gateway error'),
                         'response-code' => PGI_Response::GATEWAY_ERROR,
                         'response-message' => __('There was an error creating a new reBill event.'),
                         'curl-info' => $status
-                    ), $response);
+                    );
                 }                    
             }           
         }
@@ -274,12 +274,12 @@
 
             // The data is invalid, return a `DATA_ERROR`
             if(!$valid_data) {
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Data error'),
                     'response-code' => PGI_Response::DATA_ERROR,
                     'response-message' => __('Missing Fields: %s', array(implode(', ', $missing_fields))),
                     'missing-fields' => $missing_fields
-                ));
+                );
             }
             
             $eway_request_xml = simplexml_load_string('<UpdateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
@@ -295,12 +295,12 @@
             
             if (curl_errno($ch)) {
                 // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
                     'curl-info' => $info
-                ), $eway_request_xml);
+                );
             } 
             else {
                 
@@ -322,12 +322,12 @@
                 } else{
                     // Error from the API.
                     $error = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ErrorDetails)');                    
-                    return new RecurringPaymentsResponse(array(
+                    return array(
                         'status' => __('Gateway error'),
                         'response-code' => PGI_Response::GATEWAY_ERROR,
                         'response-message' => $error,
                         'curl-info' => $status
-                    ), $response);
+                    );
                 }                    
             }           
         } 
@@ -357,12 +357,12 @@
 
             if (curl_errno($ch)) {
                 // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
                     'curl-info' => $info
-                ), $eway_request_xml);
+                );
             } 
             else {
                 
@@ -382,12 +382,12 @@
                 if ($result == "Success") {
                     return true;
                 } else{
-                    return new RecurringPaymentsResponse(array(
+                    return array(
                         'status' => __('Gateway error'),
                         'response-code' => PGI_Response::GATEWAY_ERROR,
                         'response-message' => __('There was an error updating a reBill event.'),
                         'curl-info' => $status
-                    ), $response);
+                    );
                 }  
 
             }  
@@ -418,12 +418,12 @@
 
             if (curl_errno($ch)) {
                 // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
                     'curl-info' => $info
-                ), $eway_request_xml);
+                );
             } 
             else {
                 
@@ -481,12 +481,12 @@
 
             if (curl_errno($ch)) {
                 // The Gateway did not connect to eWay successfully or some error occurred.
-                return new RecurringPaymentsResponse(array(
+                return array(
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
                     'curl-info' => $info
-                ), $eway_request_xml);
+                );
             } 
             else {
                 
