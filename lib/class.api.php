@@ -83,27 +83,21 @@
 		 * Returns the CustomerID depending on the gateway mode.
 		 */
 		public static function getCustomerId() {
-			return (eWayAPI::isTesting())
-				? eWayAPI::DEVELOPMENT_CUSTOMER_ID
-				: (string)Symphony::Configuration()->get("production-customer-id", 'eway');
+			return (string)Symphony::Configuration()->get("production-customer-id", 'eway');
 		}
 
 		/**
 		 * Returns the Merchant Email depending on the gateway mode.
 		 */
 		public static function getMerchantId() {
-			return (eWayAPI::isTesting())
-				? eWayAPI::DEVELOPMENT_MERCHANT_ID
-				: (string)Symphony::Configuration()->get("production-merchant-id", 'eway');
+			return (string)Symphony::Configuration()->get("production-merchant-id", 'eway');
 		}
 
 		/**
 		 * Returns the Merchant Password depending on the gateway mode.
 		 */
 		public static function getMerchantPassword() {
-			return (eWayAPI::isTesting())
-				? eWayAPI::DEVELOPMENT_MERCHANT_PASSWORD
-				: (string)Symphony::Configuration()->get("production-merchant-password", 'eway');
+			return  (string)Symphony::Configuration()->get("production-merchant-password", 'eway');
 		}
 
 		/**
