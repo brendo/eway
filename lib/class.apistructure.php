@@ -15,8 +15,7 @@
 			$curl->init($uri);            
 			$curl->setopt('POST', true);
 			$curl->setopt('POSTFIELDS', $xml);
-			$curl->setopt('TIMEOUT', $timeouts);
-
+			$curl->setopt('TIMEOUT', $timeout);
 			return $curl;
 		}
 	}
