@@ -531,7 +531,7 @@
             switch (strtolower($type)) {
                 case "weekly":
                     $data['RebillInterval'] = 1;
-                    $data['RebillIntervalType'] = 1;
+                    $data['RebillIntervalType'] = 2;
                     break;
                 case "fortnightly":
                     $data['RebillInterval'] = 2;
