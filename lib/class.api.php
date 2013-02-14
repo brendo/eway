@@ -75,6 +75,38 @@
 			require_once EXTENSIONS . '/eway/lib/method.xmlpaymentrefund.php';
 			return XMLPaymentRefund::refundTransaction($values);
 		}
+
+        /*
+         * TOKEN functions.
+         * 
+         * @see https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx
+         * 
+         */
+		public static function createCustomer(array $customer = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
+			return TokenPayments::createCustomer($customer);
+		}
+        
+		public static function updateCustomer(array $customer = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
+			return TokenPayments::updateCustomer($customer);
+		}
+        
+		public static function processTokenPayment(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
+			return TokenPayments::processTokenPayment($values);
+		}
+        
+		public static function queryTokenCustomer(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
+			return TokenPayments::queryTokenCustomer($values);
+		}
+        
+		public static function ProcessPaymentWithCVN(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
+			return TokenPayments::ProcessPaymentWithCVN($values);
+		}       
+        
 	}
 
 	Abstract Class eWaySettings extends PGI_MethodConfiguration {
@@ -177,9 +209,7 @@
             
 			// Generate status result:            
 			//$test   = $this->xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
-            $result = $this->xpath->evaluate('string(//CreateRebillCustomerResult/Result)');
-            echo "####" . $result . "####"; 
-            
+            $result = $this->xpath->evaluate('string(//CreateRebillCustomerResult/Result)');          
 			$eway_transaction_id   = $this->xpath->evaluate('string(/CreateRebillCustomerResult/Result)');
 			$RebillCustomerID = $this->xpath->evaluate('string(/CreateRebillCustomerResult/RebillCustomerID)');
 
