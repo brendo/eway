@@ -210,7 +210,8 @@
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
-                    'curl-info' => $info
+                    'curl-info' => $info,
+                    'raw' => $curl_result
                 );
             } 
             else {
@@ -241,7 +242,8 @@
                         'status' => __('Gateway error'),
                         'response-code' => PGI_Response::GATEWAY_ERROR,
                         'response-message' => __('There was an error creating a new reBill event.'),
-                        'curl-info' => $status
+                        'curl-info' => $status,
+                        'raw' => $curl_result
                     );
                 }                    
             }           
