@@ -555,8 +555,26 @@
 
     Class RecurringPaymentsResponse extends eWayResponse {
 
-        public function parseResponse($response) {
-            return parent::parseRecurringResponse($response);
-        }
+		public function parseRecurringResponse($response) {
+
+            // Create a document for the result and load the result
+			$eway_result = new DOMDocument('1.0', 'utf-8');
+			$eway_result->formatOutput = true;
+			$eway_result->loadXML($response);
+			$this->xpath = new DOMXPath($eway_result);
+
+			// Generate status result:
+            $result = $this->xpath->evaluate('string(//CreateRebillCustomerResult/Result)');
+			$eway_transaction_id   = $this->xpath->evaluate('string(/CreateRebillCustomerResult/Result)');
+			$RebillCustomerID = $this->xpath->evaluate('string(/CreateRebillCustomerResult/RebillCustomerID)');
+
+			$eway_approved = 'Success' == strtolower($this->xpath->evaluate('string(/CreateRebillCustomerResult/Result)'));
+
+			// Hoorah, we spoke to eway, lets return what they said
+			return array(
+				'status' => $eway_approved ? "Success" : __('Declined'),
+				'RebillCustomerID' => $RebillCustomerID
+			);
+		}
 
     }
