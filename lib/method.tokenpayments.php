@@ -158,13 +158,7 @@
                     return $customerId;
                 }
 				else {
-                    return new TokenPaymentsResponse(array(
-                        'status' => __('Gateway error'),
-                        'response-code' => PGI_Response::GATEWAY_ERROR,
-                        'response-message' => __('There was an error creating a new Customer.'),
-                        'curl-info' => $status,
-						'gateway-response' => $curl_result
-                    ), $eway_request_xml);
+                    return new TokenPaymentsResponse($curl_result, $eway_request_xml);
                 }
             }
         }
@@ -218,7 +212,6 @@
                 ), $eway_request_xml);
             }
             else {
-
                 curl_close($ch);
 
                 $dom = new DOMDocument();
@@ -238,13 +231,7 @@
                     return true;
                 }
 				else {
-                    return new TokenPaymentsResponse(array(
-                        'status' => __('Gateway error'),
-                        'response-code' => PGI_Response::GATEWAY_ERROR,
-                        'response-message' => __('There was an error updating Customer.'),
-                        'curl-info' => $status,
-						'gateway-response' => $curl_result
-                    ), $eway_request_xml);
+                    return new TokenPaymentsResponse($curl_result, $eway_request_xml);
                 }
             }
         }
@@ -393,14 +380,14 @@
             }
         }
 
-        /**
-         * Process payment with CVN.
-         *
-         * @param array $values Array of values containing the payment details.
-         *
-         * @return boolean
-         */
-        public static function ProcessPaymentWithCVN(array $values = array()) {
+		/**
+		 * Process payment with CVN.
+		 *
+		 * @param array $values Array of values containing the payment details.
+		 *
+		 * @return boolean
+		 */
+		public static function ProcessPaymentWithCVN(array $values = array()) {
 
 			// Check for missing fields
 			$valid_data = true;
@@ -445,9 +432,54 @@
 				curl_close($ch);
 				return new TokenPaymentsResponse($curl_result, $eway_request_xml);
 			}
-        }
+		}
+	}
 
-    }
+	Abstract Class Token_Request extends PGI_Request {
+		public static function start($uri, $xml, $timeout = 60) {
+
+			// Make sure there isn't a xml tag in the body.
+			$xml_body = str_replace('<?xml version="1.0"?>', '', $xml);
+
+			$data = '<?xml version="1.0" encoding="utf-8"?>
+                    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                      <soap:Header>
+                            <eWAYHeader xmlns="https://www.eway.com.au/gateway/managedpayment">
+                              <eWAYCustomerID>%1$s</eWAYCustomerID>
+                              <Username>%2$s</Username>
+                              <Password>%3$s</Password>
+                            </eWAYHeader>
+                      </soap:Header>
+                      <soap:Body>%4$s</soap:Body>
+                    </soap:Envelope>';
+
+			// Prepare data to be sent to eWay.
+			$post_xml = sprintf($data,
+				eWaySettings::getCustomerId(),
+				eWaySettings::getMerchantId(),
+				eWaySettings::getMerchantPassword(),
+				$xml_body
+			);
+
+			$header  = "POST ". $uri ." HTTP/1.1 \r\n";
+			$header .= "Host: www.eway.com.au \r\n";
+			$header .= "Content-Type: text/xml; charset=utf-8 \r\n";
+			$header .= "Content-Length: ".strlen($post_xml)." \r\n";
+			$header .= "Connection: close \r\n\r\n";
+			$header .= $post_xml;
+
+			// Send the data to eWay.
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($curl, CURLOPT_HEADER, false);
+
+			curl_setopt($curl, CURLOPT_URL, $uri);
+			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $header);
+
+			return $curl;
+		}
+	}
 
 	Class TokenPaymentsResponse extends eWayResponse {
 
@@ -475,10 +507,6 @@
 		public function parseResponse($response) {
 			$xpath = $this->parseGatewayResponse($response);
 
-			// Generate status result:
-			$eway_transaction_id   = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayTrxnNumber)');
-			$bank_authorisation_id = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayAuthCode)');
-
 			// eWay responses come back like 00,Transaction Approved(Test CVN Gateway)
 			// It's important to known that although it's called ewayTrxnError, Error's can be 'good' as well
 			$ewayTrxnError = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayTrxnError)');
@@ -487,20 +515,52 @@
 			// Get the code
 			$eway_code = is_numeric($eway_return[0]) ? array_shift($eway_return) : '';
 
-			// Get the response
-			$eway_response = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_return));
+			// Do we have an error code? If there is a SOAP execption thrown, we will not
+			// so will have to parse the error code from the strings.
+			if($eway_code === '') {
+				$fault_error = $xpath->evaluate('string(/soap:Envelope/soap:Body//faultstring)');
 
-			// Get the return Amount
-			$ewayReturnAmount = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayReturnAmount)');
+				if(preg_match('/Credit Card expiry date must be valid/i', $fault_error)) {
+					$eway_code = 54;
+					$eway_response = $fault_error;
+				}
+				else if(preg_match('/The \'CCNumber\' element is invalid/i', $fault_error)) {
+					$eway_code = 14;
+					$eway_response = 'Credit Card number must be valid';
+				}
+			}
+			// Normal request handled by eway.
+			else {
+				// Generate status result:
+				$eway_transaction_id   = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayTrxnNumber)');
+				$bank_authorisation_id = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayAuthCode)');
 
-			return array(
+				// Get the response
+				$eway_response = preg_replace('/^eWAY Error:\s*/i', '', array_shift($eway_return));
+
+				// Get the return Amount
+				$ewayReturnAmount = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:ewayReturnAmount)');
+			}
+
+			$return = array(
 				'status' => in_array($eway_code, eWaySettings::getApprovedCodes()) ? __('Approved') : __('Declined'),
 				'response-code' => $eway_code,
-				'response-message' => $eway_response,
-				'pgi-transaction-id' => $eway_transaction_id,
-				'bank-authorisation-id' => $bank_authorisation_id,
-				'amount' => $ewayReturnAmount
+				'response-message' => $eway_response
 			);
+
+			if(isset($eway_transaction_id)) {
+				$return['pgi-transaction-id'] = $eway_transaction_id;
+			}
+
+			if(isset($bank_authorisation_id)) {
+				$return['bank-authorisation-id'] = $bank_authorisation_id;
+			}
+
+			if(isset($ewayReturnAmount)) {
+				$return['amount'] = $ewayReturnAmount;
+			}
+
+			return $return;
 		}
 
 		public function addToEventXML(XMLElement $event_xml) {
@@ -518,7 +578,6 @@
 
 				// Get the fault reason
 				$fault_error = $xpath->evaluate('string(/soap:Envelope/soap:Body//faultstring)');
-
 				$xEway->appendChild(new XMLElement('fault-string', $fault_error));
 			}
 
