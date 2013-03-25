@@ -135,7 +135,7 @@
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
-                    'curl-info' => $info
+                    'curl-info' => $status
                 ), $eway_request_xml);
             }
             else {
@@ -208,7 +208,7 @@
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
-                    'curl-info' => $info
+                    'curl-info' => $status
                 ), $eway_request_xml);
             }
             else {
@@ -281,7 +281,7 @@
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
-                    'curl-info' => $info
+                    'curl-info' => $status
                 ), $eway_request_xml);
             }
             else {
@@ -371,7 +371,7 @@
                     'status' => __('Gateway error'),
                     'response-code' => PGI_Response::GATEWAY_ERROR,
                     'response-message' => __('There was an error connecting to eWay.'),
-                    'curl-info' => $info
+                    'curl-info' => $status
                 ), $eway_request_xml);
             }
             else {
@@ -425,7 +425,7 @@
 					'status' => __('Gateway error'),
 					'response-code' => PGI_Response::GATEWAY_ERROR,
 					'response-message' => __('There was an error connecting to eWay.'),
-					'curl-info' => $info
+					'curl-info' => $status
 				), $eway_request_xml);
 			}
 			else {
