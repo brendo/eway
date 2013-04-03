@@ -45,6 +45,10 @@
 		}
 
 		public static function isTesting() {
+			if(self::$mode == 'production') {
+				return false;
+			}
+
 			return self::$mode == 'development' || Symphony::Configuration()->get('gateway-mode', 'eway') == 'development';
 		}
 
@@ -254,6 +258,12 @@
 		public function getResponseMessage() {
 			return (is_array($this->response) && array_key_exists('response-message', $this->response))
 				? $this->response['response-message']
+				: null;
+		}
+
+		public function getResponseCode() {
+			return (is_array($this->response) && array_key_exists('response-code', $this->response))
+				? $this->response['response-code']
 				: null;
 		}
 
