@@ -10,9 +10,32 @@
                 : 'https://www.eway.com.au/gateway/ManagedPaymentService/managedcreditcardpayment.asmx';
         }
 
-        public static function getDefaults() {}
-
-        public static function getRequiredFields() {}
+		public static function getDefaultCreateCustomer() {
+			return array(
+				'CustomerRef' => '',
+				'Title' => '',
+				'FirstName' => '',
+				'LastName' => '',
+				'Company' => '',
+				'JobDesc' => '',
+				'Email' => '',
+				'Address' => '',
+				'Suburb' => '',
+				'State' => '',
+				'PostCode' => '',
+				'Country' => '',
+				'Phone' => '',
+				'Mobile' => '',
+				'Fax' => '',
+				'URL' => '',
+				'Comments' => '',
+				'CCNumber' => '',
+				'CCNameOnCard' => '',
+				'CCExpiryMonth' => '',
+				'CCExpiryYear' => '',
+				'CVN' => ''
+			);
+		}
 
         /**
          * Required fields to create a rebill customer.
@@ -98,13 +121,14 @@
          * @return CustomerID
          */
         public static function createCustomer(array $values = array()) {
+			// Merge Defaults and passed values
+			$request_array = array_merge(TokenPaymentsSettings::getDefaultCreateCustomer(), $values);
 
             // Check for missing fields
             $valid_data = true;
             $missing_fields = array();
-            $error = null;
             foreach (TokenPaymentsSettings::getRequiredCreateCustomer() as $field_name) {
-                if (!array_key_exists($field_name, $values) || $values[$field_name] == '') {
+                if (!array_key_exists($field_name, $request_array) || $request_array[$field_name] == '') {
                     $missing_fields[] = $field_name;
                     $valid_data = false;
                 }
@@ -121,7 +145,7 @@
             }
 
             $eway_request_xml = simplexml_load_string('<CreateCustomer xmlns="https://www.eway.com.au/gateway/managedpayment" />');
-            foreach($values as $field_name => $field_data) {
+            foreach($request_array as $field_name => $field_data) {
                 $eway_request_xml->addChild($field_name, General::sanitize($field_data));
             }
 
@@ -171,13 +195,14 @@
          * @return boolean
          */
         public static function updateCustomer(array $values = array()) {
+			// Merge Defaults and passed values
+			$request_array = array_merge(TokenPaymentsSettings::getDefaultCreateCustomer(), $values);
 
             // Check for missing fields
             $valid_data = true;
             $missing_fields = array();
-            $error = null;
             foreach (TokenPaymentsSettings::getRequiredUpdateCustomer() as $field_name) {
-                if (!array_key_exists($field_name, $values) || $values[$field_name] == '') {
+                if (!array_key_exists($field_name, $request_array) || $request_array[$field_name] == '') {
                     $missing_fields[] = $field_name;
                     $valid_data = false;
                 }
@@ -194,7 +219,7 @@
             }
 
             $eway_request_xml = simplexml_load_string('<UpdateCustomer xmlns="https://www.eway.com.au/gateway/managedpayment" />');
-            foreach($values as $field_name => $field_data) {
+            foreach($request_array as $field_name => $field_data) {
                 $eway_request_xml->addChild($field_name, General::sanitize($field_data));
             }
 

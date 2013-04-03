@@ -2,8 +2,6 @@
 
 	Abstract Class PGI_MethodConfiguration {
 		abstract static function getGatewayURI();
-		abstract static function getDefaults();
-		abstract static function getRequiredFields();
 		abstract static function getApprovedCodes();
 	}
 

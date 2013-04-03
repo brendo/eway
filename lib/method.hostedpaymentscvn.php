@@ -77,7 +77,6 @@
 			// Check for missing fields
 			$valid_data = true;
 			$missing_fields = array();
-			$error = null;
 			foreach (HostedPaymentsCVNSettings::getRequiredFields() as $field_name) {
 				// Don't use empty as sometimes '0' is a valid value
 				if (!array_key_exists($field_name, $request_array) || $request_array[$field_name] == '') {
