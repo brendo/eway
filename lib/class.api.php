@@ -9,37 +9,64 @@
 		 */
 		const DEVELOPMENT_CUSTOMER_ID = '87654321';
 
-        /**
-         * Constant used for Recurring Payments.
-         *
-         * @link http://www.eway.com.au/docs/api-documentation/rebill-web-service.pdf?sfvrsn=2
-         */
-        const DEVELOPMENT_MERCHANT_ID = 'test@eway.com.au';
+		/**
+		 * Constant used for Recurring Payments.
+		 *
+		 * @link http://www.eway.com.au/docs/api-documentation/rebill-web-service.pdf?sfvrsn=2
+		 */
+		const DEVELOPMENT_MERCHANT_ID = 'test@eway.com.au';
 
-        /**
-         * Constant used for Recurring Payments.
-         *
-         * @link http://www.eway.com.au/docs/api-documentation/rebill-web-service.pdf?sfvrsn=2
-         */
-        const DEVELOPMENT_MERCHANT_PASSWORD = 'test123';
+		/**
+		 * Constant used for Recurring Payments.
+		 *
+		 * @link http://www.eway.com.au/docs/api-documentation/rebill-web-service.pdf?sfvrsn=2
+		 */
+		const DEVELOPMENT_MERCHANT_PASSWORD = 'test123';
+
+		/**
+		 * eWay mode allows you to set eWay to use 'development' credentials
+		 * or 'production' credentials regardless of the Symphony configuration.
+		 *
+		 * @param string $mode
+		 *  Defaults to false
+		 */
+		static $mode = false;
 
 	/*-------------------------------------------------------------------------
 		Utilities
 	-------------------------------------------------------------------------*/
 
+		public static function setMode($mode = 'development') {
+			if(!in_array($mode, array('development', 'production'))) return false;
+
+			self::$mode = $mode;
+
+			return true;
+		}
+
 		public static function isTesting() {
-			return Symphony::Configuration()->get('gateway-mode', 'eway') == 'development';
+			return self::$mode == 'development' || Symphony::Configuration()->get('gateway-mode', 'eway') == 'development';
 		}
 
 	/*-------------------------------------------------------------------------
 		API Methods:
 	-------------------------------------------------------------------------*/
 
+		/**
+		 * Direct Payments
+		 *
+		 * @see http://www.eway.com.au/developers/api/direct-payments
+		 */
 		public static function processPayment(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.hostedpaymentscvn.php';
-
 			return HostedPaymentsCVN::processPayment($values);
 		}
+
+		/*
+		 * Recurring Payments API functions.
+		 *
+		 * @see http://www.eway.com.au/developers/api/recurring
+		 */
 
 		public static function createRebillCustomerID(array $customer = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
@@ -71,17 +98,12 @@
 			return RecurringPayments::queryTransactions($rebillCustomerID, $rebillID);
 		}
 
-		public static function refundTransaction(array $values = array()) {
-			require_once EXTENSIONS . '/eway/lib/method.xmlpaymentrefund.php';
-			return XMLPaymentRefund::refundTransaction($values);
-		}
+		/*
+		 * Token Payments API functions.
+		 *
+		 * @see http://www.eway.com.au/developers/api/token
+		 */
 
-        /*
-         * TOKEN functions.
-         *
-         * @see https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx
-         *
-         */
 		public static function createCustomer(array $customer = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
 			return TokenPayments::createCustomer($customer);
@@ -107,6 +129,16 @@
 			return TokenPayments::ProcessPaymentWithCVN($values);
 		}
 
+		/*
+		 * Refunds API functions.
+		 *
+		 * @see http://www.eway.com.au/developers/api/refunds
+		 */
+
+		public static function refundTransaction(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.xmlpaymentrefund.php';
+			return XMLPaymentRefund::refundTransaction($values);
+		}
 	}
 
 	Abstract Class eWaySettings extends PGI_MethodConfiguration {
@@ -115,21 +147,27 @@
 		 * Returns the CustomerID depending on the gateway mode.
 		 */
 		public static function getCustomerId() {
-			return (string)Symphony::Configuration()->get("production-customer-id", 'eway');
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_CUSTOMER_ID
+				: (string)Symphony::Configuration()->get("production-customer-id", 'eway');
 		}
 
 		/**
 		 * Returns the Merchant Email depending on the gateway mode.
 		 */
 		public static function getMerchantId() {
-			return (string)Symphony::Configuration()->get("production-merchant-id", 'eway');
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_MERCHANT_ID
+				: (string)Symphony::Configuration()->get("production-merchant-id", 'eway');
 		}
 
 		/**
 		 * Returns the Merchant Password depending on the gateway mode.
 		 */
 		public static function getMerchantPassword() {
-			return  (string)Symphony::Configuration()->get("production-merchant-password", 'eway');
+			return (eWayAPI::isTesting())
+				? eWayAPI::DEVELOPMENT_MERCHANT_PASSWORD
+				: (string)Symphony::Configuration()->get("production-merchant-password", 'eway');
 		}
 
 		/**
@@ -166,7 +204,6 @@
 
 			if(array_key_exists('gateway-response', $this->response)) {
 				$this->gateway_response = $this->response['gateway-response'];
-				unset($this->response['gateway-response']);
 			}
 
 			$this->request = $request;
