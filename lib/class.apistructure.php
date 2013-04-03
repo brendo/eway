@@ -16,6 +16,7 @@
 			$curl->setopt('POST', true);
 			$curl->setopt('POSTFIELDS', $xml);
 			$curl->setopt('TIMEOUT', $timeout);
+
 			return $curl;
 		}
 	}
