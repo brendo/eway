@@ -99,7 +99,7 @@
 			// double display the preference, unless this function is called from
 			// the `pgi-loader` context.
 			if(
-				Symphony::ExtensionManager()->fetchStatus('pgi_loader') == EXTENSION_ENABLED
+				in_array('pgi_loader', Symphony::ExtensionManager()->listInstalledHandles())
 				xor isset($context['pgi-loader'])
 			) return;
 
