@@ -19,8 +19,10 @@
 		}
 	}
 
+	Abstract Class Soap_Request extends PGI_Request {
 
-	Abstract Class Recurring_Request {
+		public static $namespace = null;
+
 		public static function start($uri, $xml, $timeout = 60) {
 
 			// Make sure there isn't a xml tag in the body.
@@ -28,22 +30,23 @@
 
 			$data = '<?xml version="1.0" encoding="utf-8"?>
 					<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-					  <soap:Header>
-							<eWAYHeader xmlns="http://www.eway.com.au/gateway/rebill/manageRebill">
-							  <eWAYCustomerID>%1$s</eWAYCustomerID>
-							  <Username>%2$s</Username>
-							  <Password>%3$s</Password>
-							</eWAYHeader>
-					  </soap:Header>
-					  <soap:Body>%4$s</soap:Body>
+						<soap:Header>
+								<eWAYHeader xmlns="%1$s">
+									<eWAYCustomerID>%2$s</eWAYCustomerID>
+									<Username>%3$s</Username>
+									<Password>%4$s</Password>
+								</eWAYHeader>
+						</soap:Header>
+						<soap:Body>%5$s</soap:Body>
 					</soap:Envelope>';
 
 			// Prepare data to be sent to eWay.
 			$post_xml = sprintf($data,
-								eWaySettings::getCustomerId(),
-								eWaySettings::getMerchantId(),
-								eWaySettings::getMerchantPassword(),
-								$xml_body
+				self::$namespace,
+				eWaySettings::getCustomerId(),
+				eWaySettings::getMerchantId(),
+				eWaySettings::getMerchantPassword(),
+				$xml_body
 			);
 
 			$header	 = "POST ". $uri ." HTTP/1.1 \r\n";
@@ -64,6 +67,8 @@
 
 			return $curl;
 		}
+
+
 	}
 
 	Abstract Class PGI_Response {

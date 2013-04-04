@@ -10,9 +10,9 @@
 				: 'https://www.eway.com.au/gateway/rebill/manageRebill.asmx';
 		}
 
-		public static function getDefaults() {}
-
-		public static function getRequiredFields() {}
+		public static function getSoapNamespace() {
+			return 'http://www.eway.com.au/gateway/rebill/manageRebill';
+		}
 
 		/**
 		 * Required fields to create a rebill customer.
@@ -529,10 +529,13 @@
 		/**
 		 * Setup the correct fields for eWay.
 		 *
-		 * @param type $type	Type of payment: Weekly, Fortnightly, Montly or Yearly.
-		 * @return int
+		 * @param string $type
+		 *  Type of payment: Weekly, Fortnightly, Montly or Yearly.
+		 * @return array
 		 */
 		public static function getFrequency($type) {
+			$data = array();
+
 			switch (strtolower($type)) {
 				case "weekly":
 					$data['RebillInterval'] = 1;
@@ -551,9 +554,16 @@
 					$data['RebillIntervalType'] = 4;
 					break;
 			}
+
 			return $data;
 		}
+	}
 
+	Class RecurringRequest extends SOAP_Request {
+		public static function start($uri, $xml, $timeout = 60) {
+			self::$namespace = RecurringPaymentsSettings::getSoapNamespace();
+			return parent::start($uri, $xml, $timeout);
+		}
 	}
 
 	Class RecurringPaymentsResponse extends eWayResponse {
