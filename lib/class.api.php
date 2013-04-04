@@ -118,19 +118,19 @@
 			return TokenPayments::updateCustomer($customer);
 		}
 
-		public static function processTokenPayment(array $values = array()) {
-			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
-			return TokenPayments::processTokenPayment($values);
-		}
-
 		public static function queryTokenCustomer(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
 			return TokenPayments::queryTokenCustomer($values);
 		}
 
-		public static function ProcessPaymentWithCVN(array $values = array()) {
+		public static function processTokenPayment(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
-			return TokenPayments::ProcessPaymentWithCVN($values);
+			return TokenPayments::processTokenPayment($values);
+		}
+
+		public static function processTokenPaymentWithCVN(array $values = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.tokenpayments.php';
+			return TokenPayments::processTokenPaymentWithCVN($values);
 		}
 
 		/*

@@ -151,7 +151,7 @@
 			$response_array = $response->getResponse();
 
 			$this->assertTrue($response->isSuccessful(),
-				'Payment was not successful: %s');
+				'Payment was successful: %s');
 
 			$this->assertEqual($response->getResponseCode(), 00,
 				'Response code is: %s');

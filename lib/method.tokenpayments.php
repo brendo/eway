@@ -73,6 +73,25 @@
 		}
 
 		/**
+		 * Required fields to Query the Customer.
+		 * @return type
+		 */
+		public static function getRequiredQueryCustomer() {
+			return array(
+				'managedCustomerID'
+			);
+		}
+
+		public static function getDefaultTokenPayment() {
+			return array(
+				'managedCustomerID' => '',
+				'amount' => '',
+				'invoiceReference' => '',
+				'invoiceDescription' => ''
+			);
+		}
+
+		/**
 		 * Required fields to process the Token payment.
 		 * @return type
 		 */
@@ -86,17 +105,7 @@
 		}
 
 		/**
-		 * Required fields to Query the Customer.
-		 * @return type
-		 */
-		public static function getRequiredQueryCustomer() {
-			return array(
-				'managedCustomerID'
-			);
-		}
-
-		/**
-		 * Required fields to process payments usign CVN.
+		 * Required fields to process payments using CVN.
 		 * @return type
 		 */
 		public static function getRequiredCVNPayment() {
@@ -196,7 +205,7 @@
 		 */
 		public static function updateCustomer(array $values = array()) {
 			// Merge Defaults and passed values
-			$request_array = array_merge(TokenPaymentsSettings::getRequiredUpdateCustomer(), $values);
+			$request_array = array_merge(TokenPaymentsSettings::getDefaultCreateCustomer(), $values);
 
 			// Check for missing fields
 			$valid_data = true;
@@ -359,11 +368,12 @@
 		 * @return boolean
 		 */
 		public static function processTokenPayment(array $values = array()) {
+			// Merge Defaults and passed values
+			$request_array = array_merge(TokenPaymentsSettings::getDefaultTokenPayment(), $values);
 
 			// Check for missing fields
 			$valid_data = true;
 			$missing_fields = array();
-			$error = null;
 			foreach (TokenPaymentsSettings::getRequiredTokenPayment() as $field_name) {
 				if (!array_key_exists($field_name, $values) || $values[$field_name] == '') {
 					$missing_fields[] = $field_name;
@@ -412,12 +422,13 @@
 		 *
 		 * @return boolean
 		 */
-		public static function ProcessPaymentWithCVN(array $values = array()) {
+		public static function processTokenPaymentWithCVN(array $values = array()) {
+			// Merge Defaults and passed values
+			$request_array = array_merge(TokenPaymentsSettings::getDefaultTokenPayment(), $values);
 
 			// Check for missing fields
 			$valid_data = true;
 			$missing_fields = array();
-			$error = null;
 			foreach (TokenPaymentsSettings::getRequiredCVNPayment() as $field_name) {
 				if (!array_key_exists($field_name, $values) || $values[$field_name] == '') {
 					$missing_fields[] = $field_name;
@@ -461,21 +472,21 @@
 	}
 
 	Abstract Class Token_Request extends PGI_Request {
-		public static function start($uri, $xml, $timeout = 60) {
 
+		public static function start($uri, $xml, $timeout = 60) {
 			// Make sure there isn't a xml tag in the body.
 			$xml_body = str_replace('<?xml version="1.0"?>', '', $xml);
 
 			$data = '<?xml version="1.0" encoding="utf-8"?>
 					<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-					  <soap:Header>
+						<soap:Header>
 							<eWAYHeader xmlns="https://www.eway.com.au/gateway/managedpayment">
 							  <eWAYCustomerID>%1$s</eWAYCustomerID>
 							  <Username>%2$s</Username>
 							  <Password>%3$s</Password>
 							</eWAYHeader>
-					  </soap:Header>
-					  <soap:Body>%4$s</soap:Body>
+						</soap:Header>
+						<soap:Body>%4$s</soap:Body>
 					</soap:Envelope>';
 
 			// Prepare data to be sent to eWay.
@@ -495,11 +506,10 @@
 
 			// Send the data to eWay.
 			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_URL, $uri);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($curl, CURLOPT_HEADER, false);
-
-			curl_setopt($curl, CURLOPT_URL, $uri);
 			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $header);
 
 			return $curl;
@@ -545,7 +555,11 @@
 			if($eway_code === '') {
 				$fault_error = $xpath->evaluate('string(/soap:Envelope/soap:Body//faultstring)');
 
-				if(preg_match('/Credit Card expiry date must be valid/i', $fault_error)) {
+				if(preg_match('/Invalid managedCustomerID/i', $fault_error)) {
+					$eway_code = PGI_Response::DATA_ERROR;
+					$eway_response = $fault_error;
+				}
+				else if(preg_match('/Credit Card expiry date must be valid/i', $fault_error)) {
 					$eway_code = 54;
 					$eway_response = $fault_error;
 				}
