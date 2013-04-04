@@ -475,7 +475,7 @@
 		}
 	}
 
-	Class Token_Request extends SOAP_Request {
+	Abstract Class Token_Request extends SOAP_Request {
 		public static function start($uri, $xml, $timeout = 60) {
 			self::$namespace = TokenPaymentsSettings::getSoapNamespace();
 			return parent::start($uri, $xml, $timeout);

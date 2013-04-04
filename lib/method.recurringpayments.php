@@ -559,7 +559,7 @@
 		}
 	}
 
-	Class RecurringRequest extends SOAP_Request {
+	Abstract Class Recurring_Request extends SOAP_Request {
 		public static function start($uri, $xml, $timeout = 60) {
 			self::$namespace = RecurringPaymentsSettings::getSoapNamespace();
 			return parent::start($uri, $xml, $timeout);
