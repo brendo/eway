@@ -104,7 +104,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<CreateRebillCustomer xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+			$eway_request_xml = simplexml_load_string('<CreateRebillCustomer xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($values as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -136,7 +136,7 @@
 
 				// Because 'CreateRebillCustomerResponse' has another namespace,
 				// we need to define how we'll name it in our XPath expression:
-				$xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+				$xpath->registerNamespace('eway', RecurringPaymentsSettings::getSoapNamespace());
 
 				// Also give the SOAP namespace a name:
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
@@ -194,7 +194,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<CreateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+			$eway_request_xml = simplexml_load_string('<CreateRebillEvent xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($values as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -227,7 +227,7 @@
 
 				// Because 'CreateRebillCustomerResponse' has another namespace,
 				// we need to define how we'll name it in our XPath expression:
-				$xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+				$xpath->registerNamespace('eway', RecurringPaymentsSettings::getSoapNamespace());
 
 				// Also give the SOAP namespace a name:
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
@@ -286,7 +286,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<UpdateRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+			$eway_request_xml = simplexml_load_string('<UpdateRebillEvent xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($values as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -316,7 +316,7 @@
 				$dom->loadXML($response);
 				$xpath = new DOMXPath($dom);
 
-				$xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+				$xpath->registerNamespace('eway', RecurringPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 				$result = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:Result)');
 
@@ -347,10 +347,9 @@
 		 */
 		public static function deleteRebillEvent($rebillCustomerID, $rebillID) {
 
-			if (!$rebillCustomerID) return;
-			if (!$rebillID)			return;
+			if (!$rebillCustomerID || !$rebillID) return;
 
-			$eway_request_xml = simplexml_load_string('<DeleteRebillEvent xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+			$eway_request_xml = simplexml_load_string('<DeleteRebillEvent xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
 			$eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
 			$eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
 
@@ -379,7 +378,7 @@
 				$dom->loadXML($response);
 				$xpath = new DOMXPath($dom);
 
-				$xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+				$xpath->registerNamespace('eway', RecurringPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 				$result = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:Result)');
 
@@ -408,10 +407,9 @@
 		 */
 		public static function queryTransactions ($rebillCustomerID, $rebillID) {
 
-			if (!$rebillCustomerID) return;
-			if (!$rebillID)			return;
+			if (!$rebillCustomerID || !$rebillID) return;
 
-			$eway_request_xml = simplexml_load_string('<QueryTransactions xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+			$eway_request_xml = simplexml_load_string('<QueryTransactions xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
 			$eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
 			$eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
 
@@ -440,7 +438,7 @@
 				$dom->loadXML($response);
 				$xpath = new DOMXPath($dom);
 
-				$xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+				$xpath->registerNamespace('eway', RecurringPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 
 				$QueryTransactionsResult = $xpath->query('/soap:Envelope/soap:Body//eway:QueryTransactionsResult');
@@ -471,10 +469,9 @@
 		 */
 		public static function queryNextTransaction ($rebillCustomerID, $rebillID) {
 
-			if (!$rebillCustomerID) return;
-			if (!$rebillID)			return;
+			if (!$rebillCustomerID || !$rebillID) return;
 
-			$eway_request_xml = simplexml_load_string('<QueryNextTransaction xmlns="http://www.eway.com.au/gateway/rebill/manageRebill" />');
+			$eway_request_xml = simplexml_load_string('<QueryNextTransaction xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
 			$eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
 			$eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
 
@@ -503,7 +500,7 @@
 				$dom->loadXML($response);
 				$xpath = new DOMXPath($dom);
 
-				$xpath->registerNamespace('eway', 'http://www.eway.com.au/gateway/rebill/manageRebill');
+				$xpath->registerNamespace('eway', RecurringPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 
 				$TransactionDate = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:TransactionDate)');
@@ -530,7 +527,7 @@
 		 * Setup the correct fields for eWay.
 		 *
 		 * @param string $type
-		 *  Type of payment: Weekly, Fortnightly, Montly or Yearly.
+		 *  Type of payment: Weekly, Fortnightly, Monthly or Yearly.
 		 * @return array
 		 */
 		public static function getFrequency($type) {

@@ -157,7 +157,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<CreateCustomer xmlns="https://www.eway.com.au/gateway/managedpayment" />');
+			$eway_request_xml = simplexml_load_string('<CreateCustomer xmlns="' . TokenPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($request_array as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -185,7 +185,7 @@
 				$xpath = new DOMXPath($dom);
 
 				// Register SOAP namespaces:
-				$xpath->registerNamespace('eway', 'https://www.eway.com.au/gateway/managedpayment');
+				$xpath->registerNamespace('eway', TokenPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 
 				$customerId = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:CreateCustomerResult)');
@@ -231,7 +231,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<UpdateCustomer xmlns="https://www.eway.com.au/gateway/managedpayment" />');
+			$eway_request_xml = simplexml_load_string('<UpdateCustomer xmlns="' . TokenPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($request_array as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -259,7 +259,7 @@
 				$xpath = new DOMXPath($dom);
 
 				// Register SOAP namespaces:
-				$xpath->registerNamespace('eway', 'https://www.eway.com.au/gateway/managedpayment');
+				$xpath->registerNamespace('eway', TokenPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 
 				$response = (boolean)$xpath->evaluate('string(/soap:Envelope/soap:Body//eway:UpdateCustomerResult)');
@@ -304,7 +304,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<QueryCustomer xmlns="https://www.eway.com.au/gateway/managedpayment" />');
+			$eway_request_xml = simplexml_load_string('<QueryCustomer xmlns="' . TokenPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($values as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -333,7 +333,7 @@
 				$xpath = new DOMXPath($dom);
 
 				// Register namespaces
-				$xpath->registerNamespace('eway', 'https://www.eway.com.au/gateway/managedpayment');
+				$xpath->registerNamespace('eway', TokenPaymentsSettings::getSoapNamespace());
 				$xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 
 				$responseCCName = $xpath->evaluate('string(/soap:Envelope/soap:Body//eway:CCName)');
@@ -395,7 +395,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<ProcessPayment xmlns="https://www.eway.com.au/gateway/managedpayment" />');
+			$eway_request_xml = simplexml_load_string('<ProcessPayment xmlns="' . TokenPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($values as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -450,7 +450,7 @@
 				));
 			}
 
-			$eway_request_xml = simplexml_load_string('<ProcessPaymentWithCVN xmlns="https://www.eway.com.au/gateway/managedpayment" />');
+			$eway_request_xml = simplexml_load_string('<ProcessPaymentWithCVN xmlns="' . TokenPaymentsSettings::getSoapNamespace() . '" />');
 			foreach($values as $field_name => $field_data) {
 				$eway_request_xml->addChild($field_name, General::sanitize($field_data));
 			}
@@ -499,7 +499,7 @@
 			$this->xpath = new DOMXPath($eway_result);
 
 			// Register SOAP namespaces:
-			$this->xpath->registerNamespace('eway', 'https://www.eway.com.au/gateway/managedpayment');
+			$this->xpath->registerNamespace('eway', TokenPaymentsSettings::getSoapNamespace());
 			$this->xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
 
 			return $this->xpath;
