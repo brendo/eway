@@ -102,14 +102,14 @@
 			return RecurringPayments::updateRebillEvent($values);
 		}
 
-		public static function queryNextTransaction($rebillCustomerID, $rebillID) {
-			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
-			return RecurringPayments::queryNextTransaction($rebillCustomerID, $rebillID);
-		}
-
 		public static function deleteRebillEvent($rebillCustomerID, $rebillID) {
 			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
 			return RecurringPayments::deleteRebillEvent($rebillCustomerID, $rebillID);
+		}
+
+		public static function queryNextTransaction($rebillCustomerID, $rebillID) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::queryNextTransaction($rebillCustomerID, $rebillID);
 		}
 
 		public static function queryTransactions($rebillCustomerID, $rebillID, $filters = array()) {

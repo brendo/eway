@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension id="eway" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
 	<name>eWay</name>
-	<description>An interface for eWay's Merchant Hosted Payments CVN API. Developers can use this to process payments from custom events and recurring payments.</description>
-	<repo type="github">https://github.com/abocati/eway</repo>
+	<description>An interface for some of eWay's XML API's. Developers can use this to process payments from custom events.</description>
+	<repo type="github">https://github.com/brendo/eway</repo>
 	<types>
 		<type>Workflow</type>
 	</types>
 	<authors>
 		<author>
 			<name github="brendo" symphony="brendo">Brendan Abbott</name>
-			<website>http://www.bloodbone.ws</website>
 		</author>
 		<author>
 			<name github="henrysingleton" symphony="Henry">Henry Singleton</name>
@@ -19,7 +18,11 @@
 		</author>
 	</authors>
 	<releases>
-		<release version="0.2" date="2013-02-14" min="2.3">
+		<release version="0.4" date="2013-02-14" min="2.3">
+			- Refactoring of code for sensability and consistency
+			- Added unit test coverage for Hosted Payments, Recurring Payments and Token Payments using [Symphony Tests](http://symphonyextensions.com/extensions/symphony_tests/)
+		</release>
+		<release version="0.3" date="2013-02-14" min="2.3">
 			- Added Token API function
 		</release>
 		<release version="0.2" date="2012-10-11" min="2.3">

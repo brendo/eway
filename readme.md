@@ -1,11 +1,11 @@
 # eWay Payment Gateway
 
-- Version: 0.2
-- Release Date: 29th May 2012
+- Version: 0.4
+- Release Date: 5th April, 2013
 - Author: Brendan Abbott
 - Requirements: Symphony 2.3
 
-An interface for eWay's Merchant Hosted Payments CVN API. Developers can use this to process payments from custom events. This extension also includes a Payment Gateway interface that hooks in with the [PGI Loader](https://github.com/brendo/pgi_loader)
+An interface for some of eWay's XML API's. Developers can use this to process payments from custom events. This extension also includes a Payment Gateway interface that hooks in with the [PGI Loader](https://github.com/brendo/pgi_loader)
 
 ## Installation
 
@@ -15,12 +15,7 @@ An interface for eWay's Merchant Hosted Payments CVN API. Developers can use thi
 
 3. Go to System > Preferences to add your Customer ID and set your Gateway Mode. For testing it's recommended to leave the Gateway as development which will use eWay's test Gateway & Customer ID information.
 
-4. Have a read of the [API](https://github.com/brendo/eway/wiki/API-Reference)
-
-## Recurring
-
-- This version is extended to accept Recurring Payments using eWay.
-- Have a read of the [WIKI](https://github.com/abocati/eway/wiki/Recurring)
+4. Have a read of the [API](https://github.com/brendo/eway/wiki)
 
 ## Credits
 
