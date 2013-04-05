@@ -14,6 +14,10 @@
 			return 'https://www.eway.com.au/gateway/managedpayment';
 		}
 
+		/**
+		 * Returns the fields required for creating a Customer
+		 * @return array
+		 */
 		public static function getDefaultCreateCustomer() {
 			return array(
 				'CustomerRef' => '',
@@ -43,7 +47,7 @@
 
 		/**
 		 * Required fields to create a rebill customer.
-		 * @return type
+		 * @return array
 		 */
 		public static function getRequiredCreateCustomer() {
 			return array(
@@ -60,7 +64,7 @@
 
 		/**
 		 * Required fields to update customer.
-		 * @return type
+		 * @return array
 		 */
 		public static function getRequiredUpdateCustomer() {
 			return array(
@@ -78,7 +82,7 @@
 
 		/**
 		 * Required fields to Query the Customer.
-		 * @return type
+		 * @return array
 		 */
 		public static function getRequiredQueryCustomer() {
 			return array(
@@ -86,6 +90,10 @@
 			);
 		}
 
+		/**
+		 * Returns the default fields for the Token Payment function
+		 * @return array
+		 */
 		public static function getDefaultTokenPayment() {
 			return array(
 				'managedCustomerID' => '',
@@ -97,7 +105,7 @@
 
 		/**
 		 * Required fields to process the Token payment.
-		 * @return type
+		 * @return array
 		 */
 		public static function getRequiredTokenPayment() {
 			return array(
@@ -110,7 +118,7 @@
 
 		/**
 		 * Required fields to process payments using CVN.
-		 * @return type
+		 * @return array
 		 */
 		public static function getRequiredCVNPayment() {
 			return array(

@@ -183,6 +183,9 @@
 
 			$this->assertEqual(count($response_array['missing-fields']), 1,
 				'The missing fields reported matched the fields omitted: %s');
+
+			$this->assertEqual($response_array['missing-fields'][0], 'cvn',
+				'The missing fields is cvn: %s');
 		}
 
 		public function testInvalidCustomerIDProcessTokenPaymentWithCVN() {

@@ -77,6 +77,21 @@
 			return RecurringPayments::createRebillCustomer($customer);
 		}
 
+		public static function updateRebillCustomer(array $customer = array()) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::updateRebillCustomer($customer);
+		}
+
+		public static function deleteRebillCustomer($rebillCustomerID) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::deleteRebillCustomer($rebillCustomerID);
+		}
+
+		public static function queryRebillCustomer($rebillCustomerID) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::queryRebillCustomer($rebillCustomerID);
+		}
+
 		public static function createRebillEvent(array $values = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
 			return RecurringPayments::createRebillEvent($values);
@@ -97,9 +112,9 @@
 			return RecurringPayments::deleteRebillEvent($rebillCustomerID, $rebillID);
 		}
 
-		public static function queryTransactions($rebillCustomerID, $rebillID) {
+		public static function queryTransactions($rebillCustomerID, $rebillID, $filters = array()) {
 			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
-			return RecurringPayments::queryTransactions($rebillCustomerID, $rebillID);
+			return RecurringPayments::queryTransactions($rebillCustomerID, $rebillID, $filters);
 		}
 
 		/*
@@ -189,10 +204,10 @@
 	}
 
 	Class eWayResponse extends PGI_Response {
+		protected $request = null;
 		protected $response = array();
 		protected $gateway_response = array();
-		protected $xpath = null;
-		protected $request = null;
+		public $xpath = null;
 
 		public function __construct($response, $request = null) {
 			if(!is_array($response)) {
