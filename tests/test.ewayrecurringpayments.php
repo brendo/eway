@@ -289,7 +289,6 @@
 				'Rebill Event ID was successful: %s');
 
 			$response = eWayAPI::queryRebillEvent($customerID, $rebillID);
-			var_dump($response);
 			$this->assertNotEqual(count($response), 0,
 				'Rebill Event exists: %s');
 		}
