@@ -267,6 +267,34 @@
 		}
 
 		/**
+		 * Query Rebill Event
+		 */
+		public function testQueryRebillEvent() {
+			$fields = $this->customerFields();
+
+			$customerID = eWayAPI::createRebillCustomerID($fields);
+
+			$this->assertIsA($customerID, 'string',
+				'Rebill Customer was created: %s');
+
+			$payment = $this->paymentFields();
+			$payment['RebillCustomerID'] = $customerID;
+			$payment['RebillInitDate'] = 'May 5th 2013';
+			$payment['RebillStartDate'] = 'May 6th 2013';
+			$payment['RebillEndDate'] = 'May 5th 2015';
+
+			$rebillID = eWayAPI::createRebillEvent($payment);
+
+			$this->assertIsA($rebillID, 'string',
+				'Rebill Event ID was successful: %s');
+
+			$response = eWayAPI::queryRebillEvent($customerID, $rebillID);
+			var_dump($response);
+			$this->assertNotEqual(count($response), 0,
+				'Rebill Event exists: %s');
+		}
+
+		/**
 		 * Delete Rebill Event
 		 */
 		public function testFailedDeleteRebillEvent() {

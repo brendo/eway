@@ -107,6 +107,11 @@
 			return RecurringPayments::deleteRebillEvent($rebillCustomerID, $rebillID);
 		}
 
+		public static function queryRebillEvent($rebillCustomerID, $rebillID) {
+			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
+			return RecurringPayments::queryRebillEvent($rebillCustomerID, $rebillID);
+		}
+
 		public static function queryNextTransaction($rebillCustomerID, $rebillID) {
 			require_once EXTENSIONS . '/eway/lib/method.recurringpayments.php';
 			return RecurringPayments::queryNextTransaction($rebillCustomerID, $rebillID);

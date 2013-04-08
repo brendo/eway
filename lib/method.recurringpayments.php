@@ -321,10 +321,9 @@
 		}
 
 		/**
-		 * Delete existing rebill customer
+		 * Query existing rebill customer
 		 *
 		 * @param string $rebillCustomerID
-		 *
 		 * @return boolean
 		 */
 		public static function queryRebillCustomer($rebillCustomerID) {
@@ -593,6 +592,71 @@
 				else {
 					return $response;
 				}
+			}
+		}
+
+		/**
+		 * Query an existing rebill event.
+		 *
+		 * @param string $rebillCustomerID
+		 * @param string $rebillID
+		 *
+		 * @return boolean
+		 */
+		public static function queryRebillEvent($rebillCustomerID, $rebillID) {
+			$params_exist = self::parametersExist($rebillCustomerID, $rebillID);
+			if(is_a($params_exist, 'RecurringPaymentsResponse')) {
+				return $params_exist;
+			}
+
+			$eway_request_xml = simplexml_load_string('<QueryRebillEvent xmlns="' . RecurringPaymentsSettings::getSoapNamespace() . '" />');
+			$eway_request_xml->addChild('RebillCustomerID', General::sanitize($rebillCustomerID));
+			$eway_request_xml->addChild('RebillID', General::sanitize($rebillID));
+
+			// Execute the transaction.
+			$ch = Recurring_Request::start(RecurringPaymentsSettings::getGatewayURI(), $eway_request_xml->asXML());
+
+			$curl_result = curl_exec($ch);
+			$status = curl_getinfo($ch);
+
+			if (curl_errno($ch)) {
+				// The Gateway did not connect to eWay successfully or some error occurred.
+				return new RecurringPaymentsResponse(array(
+					'status' => __('Gateway error'),
+					'response-code' => PGI_Response::GATEWAY_ERROR,
+					'response-message' => __('There was an error connecting to eWay.'),
+					'curl-info' => $status
+				), $eway_request_xml);
+			}
+			else {
+
+				curl_close($ch);
+
+				$response = new RecurringPaymentsResponse($curl_result, $eway_request_xml);
+				$xpath = $response->parseGatewayResponse($curl_result);
+
+				// If successful, return the true, otherwise $response object
+				if($response->isSuccessful()) {
+					$rebillEvent = $xpath->query('//eway:QueryRebillEventResult');
+
+					// Build an array with old/future transactions.
+					$details = array();
+					foreach($rebillEvent as $node) {
+						foreach ($node->childNodes as $child) {
+							if(in_array($child->nodeName, array('Result', 'ErrorSeverity', 'ErrorDetails'))) {
+								continue;
+							}
+
+							$details[$child->nodeName] = $child->nodeValue;
+						}
+					}
+
+					return $details;
+				}
+				else {
+					return $response;
+				}
+
 			}
 		}
 
