@@ -587,11 +587,13 @@
 
 				// Get the raw response from eWay
 				$response = $this->getResponse(false);
-				$xpath = $this->parseGatewayResponse($response);
+				if(is_string($response)) {
+					$xpath = $this->parseGatewayResponse($response);
 
-				// Get the fault reason
-				$fault_error = $xpath->evaluate('string(/soap:Envelope/soap:Body//faultstring)');
-				$xEway->appendChild(new XMLElement('fault-string', $fault_error));
+					// Get the fault reason
+					$fault_error = $xpath->evaluate('string(/soap:Envelope/soap:Body//faultstring)');
+					$xEway->appendChild(new XMLElement('fault-string', $fault_error));
+				}
 			}
 
 			else {

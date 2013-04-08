@@ -206,7 +206,7 @@
 	Class eWayResponse extends PGI_Response {
 		protected $request = null;
 		protected $response = array();
-		protected $gateway_response = array();
+		protected $gateway_response = null;
 		public $xpath = null;
 
 		public function __construct($response, $request = null) {
